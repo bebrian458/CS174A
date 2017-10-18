@@ -86,8 +86,7 @@ class Butterfly_Scene extends Scene_Component  // Code your butterfly assignment
     { let wing = butterfly_center;
       wing = wing.times(Mat4.translation(Vec.of(4*side_x,1,side_z)));
       wing = wing.times(Mat4.rotation(135*opposite_side, Vec.of(-1,0,0)));
-      if(!this.hover)
-        wing = wing.times(Mat4.rotation(Math.sin(5*side_z*animation_time), Vec.of(1,0,0)));
+      wing = wing.times(Mat4.rotation(Math.sin(5*side_z*animation_time), Vec.of(1,0,0)));
       wing = wing.times(Mat4.translation(Vec.of(0,0,3*Math.sqrt(2))));
       wing = wing.times(Mat4.rotation(Math.PI/4, Vec.of(0,1,0)));
       wing = wing.times(Mat4.scale(Vec.of(3,.1,3)));
@@ -106,8 +105,9 @@ class Butterfly_Scene extends Scene_Component  // Code your butterfly assignment
 
       // Make center frame of reference for entire butterfly
       let butterfly_center = Mat4.identity();
-      butterfly_center = butterfly_center.times(Mat4.translation(Vec.of(0,10,0)))
-      // butterfly_center = butterfly_center.times(Mat4.translation(Vec.of(-5+10*Math.sin(this.t/2),10+3*Math.sin(10*this.t/2),Math.cos(10*this.t))));
+      butterfly_center = butterfly_center.times(Mat4.translation(Vec.of(0,10,0)));
+      if(!this.hover)
+        butterfly_center = butterfly_center.times(Mat4.translation(Vec.of(-5+10*Math.sin(this.t/2),3*Math.sin(10*this.t/2),Math.cos(10*this.t))));
       // TODO: Movement
 
       // Draw thorax, head, and tail
