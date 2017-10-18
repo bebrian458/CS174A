@@ -51,25 +51,31 @@ class Butterfly_Scene extends Scene_Component  // Code your butterfly assignment
       this.shapes.ball.draw( graphics_state, arm, this.blue );
     }
   draw_thorax(graphics_state, butterfly_center)
-    {
-        let thorax = butterfly_center;
-        thorax = thorax.times(Mat4.scale(Vec.of(4,1,1)));
-        this.shapes.box.draw( graphics_state, thorax, this.yellow );
+    { let thorax = butterfly_center;
+      thorax = thorax.times(Mat4.scale(Vec.of(4,1,1)));
+      this.shapes.box.draw( graphics_state, thorax, this.yellow );
     }
   draw_head(graphics_state, butterfly_center)
-    {
-      let head = butterfly_center;
+    { let head = butterfly_center;
       head = head.times(Mat4.translation(Vec.of(6,0,0)));
       head = head.times(Mat4.scale(Vec.of(2,2,2)));
-
       this.shapes.ball.draw( graphics_state, head, this.red );
     }
   draw_tail(graphics_state, butterfly_center)
-    {
-      let tail = butterfly_center;
+    { let tail = butterfly_center;
       tail = tail.times(Mat4.translation(Vec.of(-7,0,0)));
       tail = tail.times(Mat4.scale(Vec.of(3,1,1)));
       this.shapes.ball.draw(graphics_state, tail, this.yellow);
+    }
+  draw_wing(graphics_state, butterfly_center, animation_time)
+    { let wing = butterfly_center;
+      wing = wing.times(Mat4.translation(Vec.of(4,1,1)));
+      wing = wing.times(Mat4.rotation(-Math.sin(5*animation_time), Vec.of(1,0,0)));
+      wing = wing.times(Mat4.translation(Vec.of(0,0,2.5*Math.sqrt(2))));
+      wing = wing.times(Mat4.rotation(Math.PI/4, Vec.of(0,1,0)));
+      wing = wing.times(Mat4.scale(Vec.of(2.5,.1,2.5)));
+
+      this.shapes.box.draw(graphics_state, wing, this.blue);
     }
   display( graphics_state )
     { graphics_state.lights = [ new Light( Vec.of(  30, 30,  34, 1 ), Color.of( 0, .4, 0, 1 ), 100000 ),         // Lights for Phong_Shader to use
@@ -78,18 +84,8 @@ class Butterfly_Scene extends Scene_Component  // Code your butterfly assignment
 
 
       /**********************************
-      Start coding down here!!!!
-      **********************************/                                     // From here on down it's just some example shapes drawn
-                                                                              // for you -- freely replace them with your own!
-
-
-
-
-
-
-
-
-
+      Start coding down here!!!!                                              // From here on down it's just some example shapes drawn
+      **********************************/                                     // for you -- freely replace them with your own!
 
       this.shapes.box.draw( graphics_state, Mat4.scale([ 15,.1,15 ]), this.green );                           // Ground plane.
 
@@ -99,6 +95,7 @@ class Butterfly_Scene extends Scene_Component  // Code your butterfly assignment
       let butterfly_center = Mat4.identity();
       butterfly_center = butterfly_center.times( Mat4.translation( Vec.of( 0,10,0 ) ) );
       this.draw_thorax(graphics_state, butterfly_center);
+      this.draw_wing(graphics_state, butterfly_center, this.t);
 
       // Draw head
       this.draw_head(graphics_state, butterfly_center);
