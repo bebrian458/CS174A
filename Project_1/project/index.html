@@ -98,7 +98,7 @@ class Butterfly_Scene extends Scene_Component  // Code your butterfly assignment
     { let leg2 = leg1;
       leg2 = leg2.times(Mat4.translation(Vec.of(0,-1,-1)));
       leg2 = leg2.times(Mat4.scale(Vec.of(4,1,4)));
-      leg2 = leg2.times(Mat4.rotation(.1*Math.cos(5*animation_time), Vec.of(1,0,0)));
+      leg2 = leg2.times(Mat4.rotation(.1*Math.sin(5*animation_time), Vec.of(1,0,0)));
       leg2 = leg2.times(Mat4.rotation(Math.PI/16, Vec.of(1,0,0)));
       leg2 = leg2.times(Mat4.scale(Vec.of(.25,1,.25)));
       leg2 = leg2.times(Mat4.translation(Vec.of(0,-1,1)));
@@ -135,14 +135,13 @@ class Butterfly_Scene extends Scene_Component  // Code your butterfly assignment
       { let antenna_seg = antenna_base;
         antenna_seg = antenna_seg.times(Mat4.translation(Vec.of(1,-1,0)));
         antenna_seg = antenna_seg.times(Mat4.scale(Vec.of(8,16,16)));
-        antenna_seg = antenna_seg.times(Mat4.rotation(-Math.PI/72*Math.sin(5*animation_time), Vec.of(0,0,1)));
+        antenna_seg = antenna_seg.times(Mat4.rotation(Math.PI/72*Math.sin(5*animation_time), Vec.of(0,0,1)));
         antenna_seg = antenna_seg.times(Mat4.rotation(-Math.PI/32, Vec.of(0,0,1)));
         antenna_seg = antenna_seg.times(Mat4.scale(Vec.of(1/8,1/16,1/16)));
         antenna_seg = antenna_seg.times(Mat4.translation(Vec.of(1,1,0)));
         this.shapes.box.draw(graphics_state, antenna_seg, this.silver);
         this.draw_antenna_seg(graphics_state, antenna_seg, animation_time, num_segs-1);
         // TODO: adjust rotation angles
-
       }
       else
         // Draw antenna_club at the end of the last segment
