@@ -62,11 +62,6 @@ class Butterfly_Scene extends Scene_Component  // Code your butterfly assignment
           this.draw_wing(graphics_state, wing_pos, animation_time);
         }
       }
-      // TODO: Rotate on hinge
-      //       Then translate by length
-      //       To line up diagonal, and avoid using sqrt
-      // TODO: translate wing up 1
-      //       bottom of wing should hinge on the top of thorax corner
 
       // Draw moving legs
       for(let side_x of [0, 1, 2])  // Offsets towards the center, away from rightmost length
@@ -80,11 +75,11 @@ class Butterfly_Scene extends Scene_Component  // Code your butterfly assignment
   draw_wing(graphics_state, butterfly_center, animation_time)
     { let wing = butterfly_center;
       wing = wing.times(Mat4.translation(Vec.of(4, 1, 1)));
-      // wing = wing.times(Mat4.rotation(135*opposite_side, Vec.of(-1,0,0)));
       wing = wing.times(Mat4.rotation(Math.sin(5*animation_time), Vec.of(1,0,0)));
-      wing = wing.times(Mat4.translation(Vec.of(0,0,3*Math.sqrt(2))));
       wing = wing.times(Mat4.rotation(Math.PI/4, Vec.of(0,1,0)));
       wing = wing.times(Mat4.scale(Vec.of(3,.1,3)));
+      wing = wing.times(Mat4.translation(Vec.of(-1,0,1)));
+      wing = wing.times(Mat4.translation(Vec.of(0,1,0)));
       this.shapes.box.draw(graphics_state, wing, this.blue);
     }
   draw_leg(graphics_state, butterfly_center, animation_time)
