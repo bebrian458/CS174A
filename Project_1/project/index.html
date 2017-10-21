@@ -176,24 +176,22 @@ class Butterfly_Scene extends Scene_Component  // Code your butterfly assignment
       Start coding down here!!!!                                              // From here on down it's just some example shapes drawn
       **********************************/                                     // for you -- freely replace them with your own!
 
-      this.shapes.box.draw( graphics_state, Mat4.scale([ 15,.1,15 ]), this.green );                           // Ground plane.
-
+      this.shapes.box.draw( graphics_state, Mat4.scale([ 50,.1,50 ]), this.green );                           // Ground plane.
       this.t = graphics_state.animation_time/750;
 
       // Make center frame of reference for entire butterfly
       let butterfly_center = Mat4.identity();
       butterfly_center = butterfly_center.times(Mat4.translation(Vec.of(0,10,0)));
       if(!this.hover)
-        // butterfly_center = butterfly_center.times(Mat4.translation(Vec.of(-5+10*Math.sin(this.t/2),3*Math.sin(10*this.t/2),0)));
-        // butterfly_center = butterfly_center.times(Mat4.translation(Vec.of(10*Math.sin(this.t/2),0,0)));
-        butterfly_center = butterfly_center.times(Mat4.translation(Vec.of(-5+10*Math.sin(this.t/2),3*Math.sin(10*this.t/2),0)));
-      // TODO: Movement
+      { butterfly_center = butterfly_center.times(Mat4.rotation(this.t, Vec.of(0,1,0)));
+        butterfly_center = butterfly_center.times(Mat4.rotation(Math.PI/12, Vec.of(-1,0,1)));
+        butterfly_center = butterfly_center.times(Mat4.translation(Vec.of(0,3*Math.sin(10*this.t/2),15)));
+      }
 
       // Draw thorax, head, and tail
       this.draw_thorax(graphics_state, butterfly_center, this.t);
       this.draw_head(graphics_state, butterfly_center, this.t);
       this.draw_tail(graphics_state, butterfly_center);
-
     }
 }
 </script>
