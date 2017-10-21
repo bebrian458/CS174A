@@ -61,10 +61,8 @@ class Butterfly_Scene extends Scene_Component  // Code your butterfly assignment
       // Draw 4 flapping wings
       for(let side_x of [-1,1])   // Reflect over mid-length of butterfly
       { for(let side_z of [-1,1]) // Reflect over width of butterfly
-        { let opposite_side = 0;
-          if(side_z == -1)
-            opposite_side = 1;
-          this.draw_wing(graphics_state, butterfly_center, animation_time, side_x, side_z, opposite_side);
+        { let wing_pos = butterfly_center.times(Mat4.scale(Vec.of(side_x, 1, side_z)));
+          this.draw_wing(graphics_state, wing_pos, animation_time);
         }
       }
       // TODO: Rotate on hinge
@@ -83,11 +81,11 @@ class Butterfly_Scene extends Scene_Component  // Code your butterfly assignment
         }
       }
     }
-  draw_wing(graphics_state, butterfly_center, animation_time, side_x, side_z, opposite_side)
+  draw_wing(graphics_state, butterfly_center, animation_time)
     { let wing = butterfly_center;
-      wing = wing.times(Mat4.translation(Vec.of(4*side_x, 1, side_z)));
-      wing = wing.times(Mat4.rotation(135*opposite_side, Vec.of(-1,0,0)));
-      wing = wing.times(Mat4.rotation(Math.sin(5*side_z*animation_time), Vec.of(1,0,0)));
+      wing = wing.times(Mat4.translation(Vec.of(4, 1, 1)));
+      // wing = wing.times(Mat4.rotation(135*opposite_side, Vec.of(-1,0,0)));
+      wing = wing.times(Mat4.rotation(Math.sin(5*animation_time), Vec.of(1,0,0)));
       wing = wing.times(Mat4.translation(Vec.of(0,0,3*Math.sqrt(2))));
       wing = wing.times(Mat4.rotation(Math.PI/4, Vec.of(0,1,0)));
       wing = wing.times(Mat4.scale(Vec.of(3,.1,3)));
@@ -123,14 +121,15 @@ class Butterfly_Scene extends Scene_Component  // Code your butterfly assignment
       head = head.times(Mat4.scale(Vec.of(2,2,2)));
       this.shapes.ball.draw( graphics_state, head, this.red );
 
-      // TODO: Draw Antenna
+      // Draw antenna
       for(let side of [-1, 1])
       { let head_side = head.times(Mat4.scale(Vec.of(1,1,side)));
         this.draw_antenna(graphics_state, head_side, animation_time);
       }
     }
   draw_antenna(graphics_state, head, animation_time)
-    { let antenna = head;
+    { // Draw base of antenna
+      let antenna = head;
       antenna = antenna.times(Mat4.rotation(Math.PI/3, Vec.of(0,1,1)));
       antenna = antenna.times(Mat4.translation(Vec.of(1,0,0)));
       antenna = antenna.times(Mat4.scale(Vec.of(1/8,1/16,1/16)));
@@ -151,10 +150,12 @@ class Butterfly_Scene extends Scene_Component  // Code your butterfly assignment
         antenna_seg = antenna_seg.times(Mat4.translation(Vec.of(1,1,0)));
         this.shapes.box.draw(graphics_state, antenna_seg, this.silver);
         this.draw_antenna_seg(graphics_state, antenna_seg, animation_time, counter-1);
+        // TODO: adjust rotation angles
+
       }
       else
-      // Draw antenna_club at end
-      this.draw_antenna_club(graphics_state, antenna_base);
+        // Draw antenna_club at end
+        this.draw_antenna_club(graphics_state, antenna_base);
     }
   draw_antenna_club(graphics_state, antenna_end)
     { let antenna_club = antenna_end;
@@ -182,6 +183,8 @@ class Butterfly_Scene extends Scene_Component  // Code your butterfly assignment
       // Make center frame of reference for entire butterfly
       let butterfly_center = Mat4.identity();
       butterfly_center = butterfly_center.times(Mat4.translation(Vec.of(0,10,0)));
+
+      // Move the butterfly in a circular pattern, always facing direction of travel
       if(!this.hover)
       { butterfly_center = butterfly_center.times(Mat4.rotation(this.t, Vec.of(0,1,0)));
         butterfly_center = butterfly_center.times(Mat4.rotation(Math.PI/12, Vec.of(-1,0,1)));
