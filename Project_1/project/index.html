@@ -55,41 +55,33 @@ class Butterfly_Scene extends Scene_Component  // Code your butterfly assignment
       thorax = thorax.times(Mat4.scale(Vec.of(4,1,1)));
       this.shapes.box.draw( graphics_state, thorax, this.yellow );
 
-      // Draw wings
-      for(let side_x of [-1,1])
-      { for(let side_z of [-1,1])
+      // TODO: Remove complexity of reflection for loops
+      //       Scale by -i for reflection instead
+
+      // Draw 4 flapping wings
+      for(let side_x of [-1,1])   // Reflect over mid-length of butterfly
+      { for(let side_z of [-1,1]) // Reflect over width of butterfly
         { let opposite_side = 0;
           if(side_z == -1)
             opposite_side = 1;
           this.draw_wing(graphics_state, butterfly_center, animation_time, side_x, side_z, opposite_side);
         }
       }
+      // TODO: Rotate on hinge
+      //       Then translate by length
+      //       To line up diagonal, and avoid using sqrt
+      // TODO: translate wing up 1
+      //       bottom of wing should hinge on the top of thorax corner
 
-      // TODO: Draw legs
-      for(let side_x of [0, 1, 2])
-      { for (let side_z of [-1, 1])
+      // Draw moving legs
+      for(let side_x of [0, 1, 2])  // Offsets towards the center, away from rightmost length
+      { for (let side_z of [-1, 1]) // Reflect over width of butterfly
         { let opposite_side = 0;
           if(side_z == -1)
             opposite_side = 1;
           this.draw_leg(graphics_state, butterfly_center, animation_time, side_x, side_z, opposite_side);
         }
       }
-
-
-    }
-  draw_head(graphics_state, butterfly_center)
-    { let head = butterfly_center;
-      head = head.times(Mat4.translation(Vec.of(6,0,0)));
-      head = head.times(Mat4.scale(Vec.of(2,2,2)));
-      this.shapes.ball.draw( graphics_state, head, this.red );
-
-      // TODO: Draw Antenna
-    }
-  draw_tail(graphics_state, butterfly_center)
-    { let tail = butterfly_center;
-      tail = tail.times(Mat4.translation(Vec.of(-7,0,0)));
-      tail = tail.times(Mat4.scale(Vec.of(3,1,1)));
-      this.shapes.ball.draw(graphics_state, tail, this.yellow);
     }
   draw_wing(graphics_state, butterfly_center, animation_time, side_x, side_z, opposite_side)
     { let wing = butterfly_center;
@@ -125,6 +117,58 @@ class Butterfly_Scene extends Scene_Component  // Code your butterfly assignment
       // TODO: adjust angles/rotation time for legs
       //       maybe use .15 for 1st rot -> adjust 2nd rot accordingly
     }
+  draw_head(graphics_state, butterfly_center, animation_time)
+    { let head = butterfly_center;
+      head = head.times(Mat4.translation(Vec.of(6,0,0)));
+      head = head.times(Mat4.scale(Vec.of(2,2,2)));
+      this.shapes.ball.draw( graphics_state, head, this.red );
+
+      // TODO: Draw Antenna
+      for(let side of [-1, 1])
+      { let head_side = head.times(Mat4.scale(Vec.of(1,1,side)));
+        this.draw_antenna(graphics_state, head_side, animation_time);
+      }
+    }
+  draw_antenna(graphics_state, head, animation_time)
+    { let antenna = head;
+      antenna = antenna.times(Mat4.rotation(Math.PI/3, Vec.of(0,1,1)));
+      antenna = antenna.times(Mat4.translation(Vec.of(1,0,0)));
+      antenna = antenna.times(Mat4.scale(Vec.of(1/8,1/16,1/16)));
+      antenna = antenna.times(Mat4.translation(Vec.of(1,0,0)));
+      this.shapes.box.draw(graphics_state, antenna, this.silver);
+
+      // Draw the rest of the 8 segments
+      this.draw_antenna_seg(graphics_state, antenna, animation_time, 8);
+    }
+  draw_antenna_seg(graphics_state, antenna_base, animation_time, counter)
+    { if(counter != 0)
+      { let antenna_seg = antenna_base;
+        antenna_seg = antenna_seg.times(Mat4.translation(Vec.of(1,-1,0)));
+        antenna_seg = antenna_seg.times(Mat4.scale(Vec.of(8,16,16)));
+        antenna_seg = antenna_seg.times(Mat4.rotation(-Math.PI/72*Math.sin(5*animation_time), Vec.of(0,0,1)));
+        antenna_seg = antenna_seg.times(Mat4.rotation(-Math.PI/32, Vec.of(0,0,1)));
+        antenna_seg = antenna_seg.times(Mat4.scale(Vec.of(1/8,1/16,1/16)));
+        antenna_seg = antenna_seg.times(Mat4.translation(Vec.of(1,1,0)));
+        this.shapes.box.draw(graphics_state, antenna_seg, this.silver);
+        this.draw_antenna_seg(graphics_state, antenna_seg, animation_time, counter-1);
+      }
+      else
+      // Draw antenna_club at end
+      this.draw_antenna_club(graphics_state, antenna_base);
+    }
+  draw_antenna_club(graphics_state, antenna_end)
+    { let antenna_club = antenna_end;
+      antenna_club = antenna_club.times(Mat4.translation(Vec.of(1,0,0)));
+      antenna_club = antenna_club.times(Mat4.scale(Vec.of(2,4,4)));
+      antenna_club = antenna_club.times(Mat4.translation(Vec.of(1,0,0)));
+      this.shapes.ball.draw(graphics_state, antenna_club, this.yellow);
+    }
+  draw_tail(graphics_state, butterfly_center)
+    { let tail = butterfly_center;
+      tail = tail.times(Mat4.translation(Vec.of(-7,0,0)));
+      tail = tail.times(Mat4.scale(Vec.of(3,1,1)));
+      this.shapes.ball.draw(graphics_state, tail, this.green);
+    }
   display( graphics_state )
     { graphics_state.lights = [ new Light( Vec.of(  30, 30,  34, 1 ), Color.of( 0, .4, 0, 1 ), 100000 ),         // Lights for Phong_Shader to use
                                 new Light( Vec.of( -10, 20, -14, 0 ), Color.of( 1, 1, .3, 1 ), 100    ) ]
@@ -134,18 +178,20 @@ class Butterfly_Scene extends Scene_Component  // Code your butterfly assignment
 
       this.shapes.box.draw( graphics_state, Mat4.scale([ 15,.1,15 ]), this.green );                           // Ground plane.
 
-      this.t = graphics_state.animation_time/1000;
+      this.t = graphics_state.animation_time/750;
 
       // Make center frame of reference for entire butterfly
       let butterfly_center = Mat4.identity();
       butterfly_center = butterfly_center.times(Mat4.translation(Vec.of(0,10,0)));
       if(!this.hover)
+        // butterfly_center = butterfly_center.times(Mat4.translation(Vec.of(-5+10*Math.sin(this.t/2),3*Math.sin(10*this.t/2),0)));
+        // butterfly_center = butterfly_center.times(Mat4.translation(Vec.of(10*Math.sin(this.t/2),0,0)));
         butterfly_center = butterfly_center.times(Mat4.translation(Vec.of(-5+10*Math.sin(this.t/2),3*Math.sin(10*this.t/2),0)));
       // TODO: Movement
 
       // Draw thorax, head, and tail
       this.draw_thorax(graphics_state, butterfly_center, this.t);
-      this.draw_head(graphics_state, butterfly_center);
+      this.draw_head(graphics_state, butterfly_center, this.t);
       this.draw_tail(graphics_state, butterfly_center);
 
     }
