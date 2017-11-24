@@ -1,5 +1,5 @@
 let core_dependencies = "Vec Mat Mat4 Shape Keyboard_Manager Graphics_State Light Color Graphics_Addresses Shader Canvas_Manager Texture Scene_Component Object_From_File Code_Manager".split(' ');
-let all_dependencies =  "Triangle Square Tetrahedron Windmill Subdivision_Sphere Cube Phong_Model Funny_Shader Movement_Controls Global_Info_Table Grid_Patch Surface_Of_Revolution Regular_2D_Polygon Cylindrical_Tube Cone_Tip Torus Grid_Sphere Closed_Cone Rounded_Closed_Cone Capped_Cylinder Rounded_Capped_Cylinder Axis_Arrows Fake_Bump_Map".split(' ');
+let all_dependencies =  "Triangle Square Tetrahedron Windmill Subdivision_Sphere Cube Phong_Model Funny_Shader Movement_Controls Global_Info_Table Grid_Patch Surface_Of_Revolution Regular_2D_Polygon Cylindrical_Tube Cone_Tip Torus Grid_Sphere Closed_Cone Rounded_Closed_Cone Capped_Cylinder Rounded_Capped_Cylinder Axis_Arrows Fake_Bump_Map Text_Line".split(' ');
   // *********** TRIANGLE ***********
 class Triangle extends Shape    // First, the simplest possible Shape – one triangle.  It has 3 vertices, each
 { constructor()                 // having their own 3D position, normal vector, and texture-space coordinate.
@@ -321,6 +321,8 @@ class Movement_Controls extends Scene_Component    // A Scene_Component that our
       this.live_string( () => { return "Center of rotation: "  + this.origin[0].toFixed(0) + ", " + this.origin[1].toFixed(0) + ", " + this.origin[2].toFixed(0) } ); this.new_line();
       this.live_string( () => { return "Facing: " + ( ( this.z_axis[0] > 0 ? "West " : "East ")             // (Actually affected by the left hand rule)
                                                     + ( this.z_axis[1] > 0 ? "Down " : "Up " ) + ( this.z_axis[2] > 0 ? "North" : "South" ) ) } ); this.new_line();
+      this.live_string( () => { return "Frame rate: " + (1/(globals.graphics_state.animation_delta_time/1000)).toFixed(2) });
+      this.new_line();
 
       this.key_triggered_button( "Move spin center to here", "o",       function() { this.origin = Mat4.inverse( this.target() ).times( Vec.of(0,0,0,1) ).to3() },    "brown" ); this.new_line();
       this.key_triggered_button( "Go to world origin",       "r",       function() { this.target().set_identity( 4,4 ) }, "orange" ); this.new_line();
@@ -671,5 +673,33 @@ class Tutorial_Animation extends Scene_Component  // An example of a Scene_Compo
       this.shapes.windmill       .draw( graphics_state, model_transform,                      this.fire          );
       model_transform.post_multiply( Mat4.translation([ 0, -2, 0 ]) );
       this.shapes.windmill       .draw( graphics_state, model_transform,                      this.blueGlass     );
+    }
+}
+
+class Text_Line extends Shape  // Draws a horizontal arrangment of quads textured over with images of ASCII characters, spelling out a string.
+{ constructor( max_size )
+    { super();
+      this.max_size = max_size;
+      var object_transform = Mat4.identity();
+      for( var i = 0; i < max_size; i++ )
+      { Square.prototype.insert_transformed_copy_into( this, [], object_transform );      // Each quad is a separate square object.
+        object_transform.post_multiply( Mat4.translation([ 1.5,0,0 ]) );
+      }
+    }
+  set_string( line, gl = this.gl )        // Overwrite the texture coordinates buffer with new values per quad that enclose each of the string's characters.
+    { this.texture_coords = [];
+      for( var i = 0; i < this.max_size; i++ )
+        {
+          var row = Math.floor( ( i < line.length ? line.charCodeAt( i ) : ' '.charCodeAt() ) / 16 ),
+              col = Math.floor( ( i < line.length ? line.charCodeAt( i ) : ' '.charCodeAt() ) % 16 );
+
+          var skip = 3, size = 32, sizefloor = size - skip;
+          var dim = size * 16,  left  = (col * size + skip) / dim,      top    = (row * size + skip) / dim,
+                                right = (col * size + sizefloor) / dim, bottom = (row * size + sizefloor + 5) / dim;
+
+          this.texture_coords.push( ...Vec.cast( [ left,  1-bottom], [ right, 1-bottom ], [ left,  1-top ], [ right, 1-top ] ) );
+        }
+      gl.bindBuffer( gl.ARRAY_BUFFER, this.graphics_card_buffers[2] );
+      gl.bufferData( gl.ARRAY_BUFFER, Mat.flatten_2D_to_1D( this.texture_coords ), gl.STATIC_DRAW );
     }
 }

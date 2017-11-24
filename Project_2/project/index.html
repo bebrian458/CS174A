@@ -2,11 +2,12 @@
 <!DOCTYPE html> <html> <head> <meta charset="UTF-8"/> <link rel="icon" href="assets/fav.ico">
 <script type="text/javascript" src="tinywebgl-ucla.js" ></script>  <!--  Javascript "include" files.  Any code in them gets executed as part of the page loading. //-->
 <script type="text/javascript" src="dependencies.js"   ></script>
+<script type="text/javascript" src="test.js"   ></script>
 <script type="text/javascript"> "use strict"
   window.onload = function init()        // ********************* THE ENTRY POINT OF THE WHOLE PROGRAM STARTS HERE *********************
     { window.contexts = {};                                                            // A global variable, "contexts".  Browsers support up to 16 WebGL contexts per page.
 
-      const scenes  = [ "Surfaces_Demo", "Movement_Controls", "Global_Info_Table" ]; // Register some scenes to the "Canvas_Manager" object -- which WebGL calls
+      const scenes  = [ "Test", "Movement_Controls", "Global_Info_Table" ]; // Register some scenes to the "Canvas_Manager" object -- which WebGL calls
                                                                                        // upon every time a draw / keyboard / mouse event happens.
 
       if( eval( "typeof " + scenes[0] ) !== "undefined" )
