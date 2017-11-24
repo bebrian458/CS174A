@@ -139,10 +139,10 @@ class Test extends Scene_Component
       if(t <= 5){
         isWalk = 1;
         // Play music
-        if(t > 2 && isPlay){
-          music.play();
-          isPlay = 0;
-        }
+        // if(t > 2 && isPlay){
+          // music.play();
+          // isPlay = 0;
+        // }
         model_transform = model_transform.times(Mat4.translation(Vec.of(2*t,0,0)));
         model_transform = model_transform.times(Mat4.rotation(Math.PI/2, Vec.of(0,1,0)));
         this.draw_figure(graphics_state, model_transform, t);
@@ -170,7 +170,7 @@ class Test extends Scene_Component
         this.shapes.ball.draw(graphics_state, sphere, this.purplePlastic);
       }
       else if(t <= 9.2){
-        music.play();
+        // music.play();
         model_transform = model_transform.times(Mat4.translation(Vec.of(2*5,0,0)));
         model_transform = model_transform.times(Mat4.rotation(Math.PI/2, Vec.of(0,1,0)));
         isShoot = 1;
@@ -179,7 +179,7 @@ class Test extends Scene_Component
         this.shapes.ball.draw(graphics_state, sphere, this.purplePlastic);
       }
       else if(t <= 13){
-        music.play();
+        // music.play();
         isShoot = 0;
         model_transform = model_transform.times(Mat4.translation(Vec.of(2*5,0,0)));
         model_transform = model_transform.times(Mat4.rotation(Math.PI/2, Vec.of(0,1,0)));
@@ -188,7 +188,7 @@ class Test extends Scene_Component
         this.shapes.ball.draw(graphics_state, sphere, this.explosion);
       }
       else{
-        music.pause();
+        // music.pause();
         model_transform = model_transform.times(Mat4.translation(Vec.of(2*5,0,0)));
         model_transform = model_transform.times(Mat4.rotation(Math.PI/2, Vec.of(0,1,0)));
         this.draw_figure(graphics_state, model_transform, t);
