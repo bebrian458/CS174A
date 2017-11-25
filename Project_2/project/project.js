@@ -17,7 +17,7 @@ class Project extends Scene_Component
                      'windmill'        : new Windmill( 10 ),
                      'box'             : new Cube(),
                      'axis'            : new Axis_Arrows(),
-                     'text'            : new Text_Line(30),
+                     'text'            : new Text_Line(50),
                      'prism'           : new ( Capped_Cylinder   .prototype.make_flat_shaded_version() )( 10, 10, [[0,1],[0,1]] ),
                      'ball'            : new Subdivision_Sphere( 4 )};
       this.submit_shapes(context, shapes);
@@ -142,7 +142,7 @@ class Project extends Scene_Component
       section = section.times(Mat4.scale(Vec.of(2,1,3)));
       section = section.times(Mat4.translation(Vec.of(0,0,1)));
 
-      // Draw wall with 9x4 sections
+      // Draw wall with 9x4 sections => 36x24 units
       for(let i = 0; i < 9; i++){
         let curr_sec = section;
         curr_sec = curr_sec.times(Mat4.translation(Vec.of(2*i,0,0)));
@@ -156,10 +156,35 @@ class Project extends Scene_Component
       }
     }
     draw_arena(graphics_state, arena)
-    { let bl_corner = arena;
+    {
+      // let bl_corner = arena;
+      // // front
+      // bl_corner = bl_corner.times(Mat4.translation(Vec.of(-15,0,-20)));
+      // this.draw_wall(graphics_state, bl_corner);
+      // // left
+      // bl_corner = bl_corner.times(Mat4.rotation(Math.PI/2, Vec.of(0,1,0)));
+      // bl_corner = bl_corner.times(Mat4.translation(Vec.of(3,0,-1)));
+      // this.draw_wall(graphics_state, bl_corner);
+      // // back
+      // bl_corner = bl_corner.times(Mat4.translation(Vec.of(35,0,1)));
       // bl_corner = bl_corner.times(Mat4.rotation(-Math.PI/2, Vec.of(0,1,0)));
-      bl_corner = bl_corner.times(Mat4.translation(Vec.of(-15,0,-20)));
-      this.draw_wall(graphics_state, bl_corner);
+      // this.draw_wall(graphics_state, bl_corner);
+      // // right
+      // bl_corner = bl_corner.times(Mat4.translation(Vec.of(33,0,3)));
+      // bl_corner = bl_corner.times(Mat4.rotation(-Math.PI/2, Vec.of(0,1,0)));
+      // this.draw_wall(graphics_state, bl_corner);
+
+      for(let side of [1,-1]){
+        let bl_corner = arena;
+        bl_corner = bl_corner.times(Mat4.translation(Vec.of(0,0,19*side)));
+        this.draw_wall(graphics_state, bl_corner);
+        let lr_corner = arena;
+        lr_corner = lr_corner.times(Mat4.translation(Vec.of(-17*side+17-1,0,-16)));
+        lr_corner = lr_corner.times(Mat4.rotation(-Math.PI/2, Vec.of(0,1,0)));
+        this.draw_wall(graphics_state, lr_corner);
+      }
+
+
     }
 
     display( graphics_state )
@@ -171,16 +196,28 @@ class Project extends Scene_Component
 
       // Init figure, axis, floor
       let figure1 = Mat4.identity();
-      this.shapes.box.draw(graphics_state, figure1.times(Mat4.scale(Vec.of(20,1,20))), this.green);
-      this.shapes.axis.draw(graphics_state, figure1, this.rgb);
+      let floor = figure1.times(Mat4.scale(Vec.of(40,1,40)));
+      // floor = floor.times(Mat4.translation(Vec.of(0,0,-1)));
+      this.shapes.box.draw(graphics_state, floor, this.green);
       figure1 = figure1.times(Mat4.translation(Vec.of(0,1,0)));
+      this.shapes.axis.draw(graphics_state, figure1, this.rgb);
+
+      // Position text
+      let text_model = Mat4.identity();
+      text_model = text_model.times(Mat4.translation(Vec.of(-13,13,-18)));
+      text_model = text_model.times(Mat4.scale(Vec.of(.5,.5,.5)));
+      this.shapes.text.set_string("Here lies the Stone of Everlasting Life");
 
       // Draw arena
       let arena = figure1;
-      this.draw_arena(graphics_state, figure1);
+      arena = arena.times(Mat4.translation(Vec.of(-15,0,-70)));
+      // arena = arena.times(Mat4.rotation(Math.PI/2, Vec.of(0,1,0)));
+      arena = arena.times(Mat4.scale(Vec.of(1,1,2.5)));
+      this.draw_arena(graphics_state, arena);
 
+      figure1 = figure1.times(Mat4.rotation(Math.PI/2, Vec.of(0,1,0)));
 
-      /* Scenes
+      /* Scenes*/
       if(t <= 6){
         // Move figure1 to the right 12 units
         runSpeed = 2;
@@ -189,13 +226,7 @@ class Project extends Scene_Component
         figure1 = figure1.times(Mat4.translation(Vec.of(2*t,0,0)));
         figure1 = figure1.times(Mat4.rotation(Math.PI/2, Vec.of(0,1,0)));
 
-        // Position text
-        let text_model = Mat4.identity();
-        text_model = text_model.times(Mat4.translation(Vec.of(0,10,0)));
-        text_model = text_model.times(Mat4.scale(Vec.of(.5,.5,.5)));
-        this.shapes.text.set_string("This is a test");
-        if(t > 2)
-          this.shapes.text.draw(graphics_state, text_model, this.textColor);
+
 
         // Camera scroll to the right
         // graphics_state.camera_transform = Mat4.look_at(Vec.of(figure1[0][3],13,25), Vec.of(figure1[0][3],0, 0) , Vec.of(0,1,0));
@@ -207,6 +238,9 @@ class Project extends Scene_Component
         headTilt_v_ang = -(t-6)*Math.PI/6 + Math.PI/6;
         figure1 = figure1.times(Mat4.translation(Vec.of(2*6,0,0)));
         figure1 = figure1.times(Mat4.rotation(Math.PI/2, Vec.of(0,1,0)));
+
+        // Start displaying text
+        this.shapes.text.draw(graphics_state, text_model, this.textColor);
       }
       else if(t <= 10){
         // Wait a sec
@@ -216,6 +250,9 @@ class Project extends Scene_Component
           headTilt_v_ang = -Math.PI/6;
         figure1 = figure1.times(Mat4.translation(Vec.of(2*6,0,0)));
         figure1 = figure1.times(Mat4.rotation(Math.PI/2, Vec.of(0,1,0)));
+
+        // Keep displaying text
+        this.shapes.text.draw(graphics_state, text_model, this.textColor);
       }
       else if (t <= 11){
         // Throw map up
@@ -223,6 +260,9 @@ class Project extends Scene_Component
         arm_angle_l = -Math.PI/3;
         figure1 = figure1.times(Mat4.translation(Vec.of(2*6,0,0)));
         figure1 = figure1.times(Mat4.rotation(Math.PI/2, Vec.of(0,1,0)));
+
+        // Keep displaying text
+        this.shapes.text.draw(graphics_state, text_model, this.textColor);
       }
       else if (t <= 16){
         // Make figure1 run 25 units; pos: 12+25=37
@@ -233,6 +273,9 @@ class Project extends Scene_Component
         figure1 = figure1.times(Mat4.translation(Vec.of(0,1/4,0)));
         figure1 = figure1.times(Mat4.rotation(Math.PI/2, Vec.of(0,1,0)));
         figure1 = figure1.times(Mat4.rotation(Math.PI/12, Vec.of(1,0,0)));
+
+        // Keep displaying text
+        this.shapes.text.draw(graphics_state, text_model, this.textColor);
       }
       else{
         // Make figure1 walk _ units
@@ -241,7 +284,7 @@ class Project extends Scene_Component
         figure1 = figure1.times(Mat4.translation(Vec.of(2*6+5*5 + (t-16),0,0)));
         figure1 = figure1.times(Mat4.rotation(Math.PI/2, Vec.of(0,1,0)));
       }
-      */
+      //*/
 
       /*** TODO: Scenes ***/
       //TODO: look left and right
@@ -265,7 +308,7 @@ class Project extends Scene_Component
       //TODO: Camera adjustments
 
       // Always draw figure
-      // this.draw_figure(graphics_state, figure1, t);
+      this.draw_figure(graphics_state, figure1, t);
 
     }
 }
