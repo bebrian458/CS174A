@@ -1,10 +1,10 @@
 //Globals
-var arm_angle = 0,arm_angle_l = 0,
+var arm_angle = 0,      arm_angle_l = 0,
     arm_raise_l = true, arm_raise_r = true,
-    headTilt_v = true, headTilt_v_ang = 0,
-    isShoot = false, bullet_pos = false,
-    isRun_leg = true, isRun_arm = false, runSpeed = 1,
-    isHoldMap = 1, isThrowMap = 0;
+    headTilt_v = true,  headTilt_v_ang = 0,
+    isShoot = false,    bullet_pos = false,
+    isRun_leg = true,   isRun_arm = false,  runSpeed = 1,
+    isHoldMap = 1,      isThrowMap = 0;
 
 
 class Project extends Scene_Component
@@ -23,7 +23,7 @@ class Project extends Scene_Component
       this.submit_shapes(context, shapes);
       Object.assign( context.globals.graphics_state, { camera_transform: Mat4.translation([ 0, -5,-25 ]), projection_transform: Mat4.perspective( Math.PI/4, context.width/context.height, .1, 1000 ) } );
       Object.assign( this, { shader: context.get_instance( Fake_Bump_Map ), textures: [], gallery: false, patch_only: false, revolution_only: false } );
-      for( let filename of [ "/assets/rgb.jpg", "/assets/stars.png", "/assets/earth.gif", "/assets/text.png", "/assets/explosion.png", "/assets/text.png", "/assets/smiley.png"] ) this.textures.push( context.get_instance( filename ) ); this.textures.push( undefined );
+      for( let filename of [ "/assets/rgb.jpg", "/assets/stars.png", "/assets/earth.gif", "/assets/text.png", "/assets/explosion.png", "/assets/text.png", "/assets/smiley.png", "/assets/wall.png"] ) this.textures.push( context.get_instance( filename ) ); this.textures.push( undefined );
       Object.assign( this, { yellow       : context.get_instance( Phong_Model  ).material( Color.of( .8, .8, .3,  1 ), .2, 1, .7, 40 ),  // Call material() on the Phong_Shader,
                              brown        : context.get_instance( Phong_Model  ).material( Color.of( .3, .3, .1,  1 ), .2, 1,  1, 40 ),  // which returns a special-made "material"
                              red          : context.get_instance( Phong_Model  ).material( Color.of(  1,  0,  0, .9 ), .1, .7, 1, 40 ),  // (a JavaScript object)
@@ -37,22 +37,21 @@ class Project extends Scene_Component
                              rgb          : context.get_instance( Phong_Model  ).material( Color.of( 0,0,0,1 ), 1, .5, .5, 40, context.get_instance( "assets/rgb.jpg" ) ),
                              smiley       : context.get_instance( Phong_Model  ).material( Color.of( .1,.1,.1,1 ), .5, .5, .5, 40, context.get_instance( "assets/smiley.png" ) ),
                              explosion    : context.get_instance( Phong_Model  ).material( Color.of( 0,0,0,1 ), .5, .5, .5, 40, context.get_instance( "assets/explosion.png" ) ),
+                             wall         : context.get_instance( Phong_Model  ).material( Color.of( 0,0,0,1 ), .5, .5, .5, 40, context.get_instance( "assets/wall.png" ) ),
                              textColor    : context.get_instance( Phong_Model  ).material( Color.of( 0,0,0,1 ), 1, 0, 0, 40, context.get_instance( "assets/text.png" ) ),
                              stars        : context.get_instance( Phong_Model  ).material( Color.of( 0,0,1,1 ), .5, .5, .5, 40, context.get_instance( "assets/stars.png" ) ) } );
     }
+    /*** Figure Pieces ***/
     draw_bullet(graphics_state, model_transform, color)
-    {
-      let bullet = model_transform;
+    { let bullet = model_transform;
       bullet = bullet.times(Mat4.translation(Vec.of(0,-1,0)));
       bullet = bullet.times(Mat4.scale(Vec.of(1,1,1)));
       bullet = bullet.times(Mat4.translation(Vec.of(0,-2,0)));
       bullet = bullet.times(Mat4.translation(Vec.of(0,-10*bullet_pos,0)));
       this.shapes.ball.draw(graphics_state, bullet, color);
     }
-
     draw_leg(graphics_state, model_transform, color, legSide, t)
-    {
-      let leg = model_transform;
+    { let leg = model_transform;
       leg = leg.times(Mat4.translation(Vec.of(-1,-1,0)));
       leg = leg.times(Mat4.scale(Vec.of(1/2,1/2,1)));
       leg = leg.times(Mat4.translation(Vec.of(1,-1,0)));
@@ -64,8 +63,7 @@ class Project extends Scene_Component
       this.shapes.box.draw(graphics_state, leg, color);
     }
     draw_arm(graphics_state, model_transform, color, armSide, t, isRaise)
-    {
-      let arm = model_transform;
+    { let arm = model_transform;
       arm = arm.times(Mat4.translation(Vec.of(-1,-1,0)));
 
       // Move arm for running
@@ -101,11 +99,11 @@ class Project extends Scene_Component
       this.shapes.box.draw(graphics_state, arm, color);
     }
     draw_figure(graphics_state, model_transform, t)
-    {
-      // Draw head
+    { // Draw head
       let head = model_transform;
+      head = head.times(Mat4.translation(Vec.of(0,1,0)));
       head = head.times(Mat4.scale(Vec.of(1/4,1/4,1/4)));
-      head = head.times(Mat4.translation(Vec.of(0,10,0)));
+      head = head.times(Mat4.translation(Vec.of(0,4,0)));
       if(headTilt_v){
         let tilt = head;
         tilt = tilt.times(Mat4.translation(Vec.of(0,-1,1)));
@@ -137,6 +135,32 @@ class Project extends Scene_Component
       right_arm = right_arm.times(Mat4.scale(Vec.of(-1,1,1)));
       this.draw_arm(graphics_state, right_arm, this.blueGlass, -1, t, arm_raise_r);
     }
+    /*** Arena Pieces ***/
+    draw_wall(graphics_state, bl_corner)
+    { let section = bl_corner;
+      section = section.times(Mat4.rotation(-Math.PI/2, Vec.of(1,0,0)));
+      section = section.times(Mat4.scale(Vec.of(2,1,3)));
+      section = section.times(Mat4.translation(Vec.of(0,0,1)));
+
+      // Draw wall with 9x4 sections
+      for(let i = 0; i < 9; i++){
+        let curr_sec = section;
+        curr_sec = curr_sec.times(Mat4.translation(Vec.of(2*i,0,0)));
+        for(let j of [0,2,2,2]){
+          curr_sec = curr_sec.times(Mat4.translation(Vec.of(0,0,j)));
+
+          // Don't draw section at entrance
+          if(i != 4 || j )
+            this.shapes.box.draw(graphics_state, curr_sec, this.wall);
+        }
+      }
+    }
+    draw_arena(graphics_state, arena)
+    { let bl_corner = arena;
+      // bl_corner = bl_corner.times(Mat4.rotation(-Math.PI/2, Vec.of(0,1,0)));
+      bl_corner = bl_corner.times(Mat4.translation(Vec.of(-15,0,-20)));
+      this.draw_wall(graphics_state, bl_corner);
+    }
 
     display( graphics_state )
     { graphics_state.lights = [ new Light( Vec.of(  30,  30,  34, 1 ), Color.of( 0, .4, 0, 1 ), 100000 )];     // shader.  Arguments to construct a Light(): Light source position
@@ -147,17 +171,16 @@ class Project extends Scene_Component
 
       // Init figure, axis, floor
       let figure1 = Mat4.identity();
+      this.shapes.box.draw(graphics_state, figure1.times(Mat4.scale(Vec.of(20,1,20))), this.green);
       this.shapes.axis.draw(graphics_state, figure1, this.rgb);
-      this.shapes.box.draw(graphics_state, figure1.times(Mat4.scale(Vec.of(20,.5,20))), this.green);
+      figure1 = figure1.times(Mat4.translation(Vec.of(0,1,0)));
 
-      // Draw door
-      let door = figure1;
-      door = door.times(Mat4.translation(Vec.of(15,2,0)));
-      door = door.times(Mat4.scale(Vec.of(1/2,1,1/1.5)));
-      this.shapes.box.draw(graphics_state, door, this.red);
+      // Draw arena
+      let arena = figure1;
+      this.draw_arena(graphics_state, figure1);
 
 
-      /* Scenes */
+      /* Scenes
       if(t <= 6){
         // Move figure1 to the right 12 units
         runSpeed = 2;
@@ -218,6 +241,7 @@ class Project extends Scene_Component
         figure1 = figure1.times(Mat4.translation(Vec.of(2*6+5*5 + (t-16),0,0)));
         figure1 = figure1.times(Mat4.rotation(Math.PI/2, Vec.of(0,1,0)));
       }
+      */
 
       /*** TODO: Scenes ***/
       //TODO: look left and right
@@ -241,7 +265,7 @@ class Project extends Scene_Component
       //TODO: Camera adjustments
 
       // Always draw figure
-      this.draw_figure(graphics_state, figure1, t);
+      // this.draw_figure(graphics_state, figure1, t);
 
     }
 }
