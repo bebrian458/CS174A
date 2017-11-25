@@ -255,23 +255,6 @@ class Project extends Scene_Component
       let arena = center;
       arena = arena.times(Mat4.scale(Vec.of(1,1,2.5)));
 
-      // let bl_corner = arena;
-      // // front
-      // bl_corner = bl_corner.times(Mat4.translation(Vec.of(-15,0,-20)));
-      // this.draw_wall(graphics_state, bl_corner);
-      // // left
-      // bl_corner = bl_corner.times(Mat4.rotation(Math.PI/2, Vec.of(0,1,0)));
-      // bl_corner = bl_corner.times(Mat4.translation(Vec.of(3,0,-1)));
-      // this.draw_wall(graphics_state, bl_corner);
-      // // back
-      // bl_corner = bl_corner.times(Mat4.translation(Vec.of(35,0,1)));
-      // bl_corner = bl_corner.times(Mat4.rotation(-Math.PI/2, Vec.of(0,1,0)));
-      // this.draw_wall(graphics_state, bl_corner);
-      // // right
-      // bl_corner = bl_corner.times(Mat4.translation(Vec.of(33,0,3)));
-      // bl_corner = bl_corner.times(Mat4.rotation(-Math.PI/2, Vec.of(0,1,0)));
-      // this.draw_wall(graphics_state, bl_corner);
-
       // Draw walls
       for(let side of [1,-1]){
         let bl_corner = arena;
@@ -305,11 +288,8 @@ class Project extends Scene_Component
         this.draw_vase_statue(graphics_state, vase, -side);
 
         let gem = newCenter.times(Mat4.translation(Vec.of(0,0,0)));
-        // gem = donut.times(Mat4.translation(Vec.of(side*10,0,0)));
         this.draw_gem_statue(graphics_state, gem);
-
       }
-
     }
 
     display( graphics_state )
@@ -326,6 +306,10 @@ class Project extends Scene_Component
       this.shapes.box.draw(graphics_state, floor, this.green);
       figure1 = figure1.times(Mat4.translation(Vec.of(0,1,0)));
       this.shapes.axis.draw(graphics_state, figure1, this.rgb);
+      let shuriken = figure1;
+      shuriken = shuriken.times(Mat4.translation(Vec.of(.5,2,-10)));
+      shuriken = shuriken.times(Mat4.rotation(-Math.PI/2, Vec.of(0,0,1)));
+      shuriken = shuriken.times(Mat4.scale(Vec.of(1/2,1/2,1/2)));
 
       // Position text
       let text_model = Mat4.identity();
@@ -336,9 +320,9 @@ class Project extends Scene_Component
       // Draw arena
       let arena = figure1;
       arena = arena.times(Mat4.translation(Vec.of(-15,0,-30)));
-      // arena = arena.times(Mat4.rotation(Math.PI/2, Vec.of(0,1,0)));
       this.draw_arena(graphics_state, arena);
 
+      // Init figure1 position and direction
       figure1 = figure1.times(Mat4.translation(Vec.of(0,0,40)));
       figure1 = figure1.times(Mat4.rotation(Math.PI, Vec.of(0,1,0)));
 
@@ -349,7 +333,6 @@ class Project extends Scene_Component
         headTilt_v_ang = Math.PI/6;
         arm_angle = -Math.PI/3;
         figure1 = figure1.times(Mat4.translation(Vec.of(0,0,2*t)));
-        // figure1 = figure1.times(Mat4.rotation(Math.PI/2, Vec.of(0,1,0)));
 
         // Start displaying text
         this.shapes.text.draw(graphics_state, text_model, this.textColor);
@@ -400,7 +383,7 @@ class Project extends Scene_Component
         this.shapes.text.draw(graphics_state, text_model, this.textColor);
       }
       else if(t <= 32){
-        // Make figure1 walk _ units
+        // Make figure1 walk 32-19 units
         runSpeed = 1;
         isRun_arm = false;
         figure1 = figure1.times(Mat4.translation(Vec.of(0,0,2*6+5*9 + (t-19))));
@@ -408,6 +391,7 @@ class Project extends Scene_Component
       else if(t <= 33){
         // Make figure1 turn towards gem and wait a sec
         isRun_leg = false;
+        headTilt_v_ang = Math.PI/6;
         figure1 = figure1.times(Mat4.translation(Vec.of(0,0,2*6+5*9+(32-19))));
         figure1 = figure1.times(Mat4.rotation(-Math.PI/2, Vec.of(0,1,0)));
       }
@@ -415,25 +399,47 @@ class Project extends Scene_Component
         // Make figure1 raise arm to reach for gem
         arm_raise_l = true;
         arm_angle_l = -(t-33)*Math.PI/2;
-        headTilt_v = false;
         figure1 = figure1.times(Mat4.translation(Vec.of(0,0,2*6+5*9+(32-19))));
         figure1 = figure1.times(Mat4.rotation(-Math.PI/2, Vec.of(0,1,0)));
       }
-      else{
-        // Make figure1 walk _ units
+      else if(t <= 38){
+        // Make figure1 stay
         arm_angle_l = -Math.PI/2;
         figure1 = figure1.times(Mat4.translation(Vec.of(0,0,2*6+5*9+(32-19))));
         figure1 = figure1.times(Mat4.rotation(-Math.PI/2, Vec.of(0,1,0)));
+
+        // Shuriken strikes
+        if(t >=35){
+          shuriken = shuriken.times(Mat4.translation(Vec.of(0,0,-30*(t-34))));
+          shuriken = shuriken.times(Mat4.rotation(-5*t*Math.PI, Vec.of(0,1,0)));
+          this.shapes.windmill.draw(graphics_state, shuriken, this.silver);
+        }
+
+        // Figure1 moves arm up to react
+        if(t >= 35.1)
+          arm_angle_l = -1.5*Math.PI;
+
+        // Figure1 turns to attacker (figure 2)
+        if(t >= 36){
+          arm_raise_l = false;
+          headTilt_v = false;
+          figure1 = figure1.times(Mat4.rotation(-Math.PI/2, Vec.of(0,1,0)));
+        }
       }
+      else {
+        // Figure1 keeps looking at figure2
+        figure1 = figure1.times(Mat4.translation(Vec.of(0,0,2*6+5*9+(32-19))));
+        figure1 = figure1.times(Mat4.rotation(-Math.PI, Vec.of(0,1,0)));
+      }
+
       // */
 
       /*** TODO: Scenes ***/
-      //TODO: shuriken/fan/ball coming from figure2
-      //TODO: look toward figure2
-      //TODO: both jump back
-      //TODO: raise arms
+      //TODO: figure2 throws fireball, hits ground in front of figure1
+      //TODO: figure1 jumps up to dodge, jumps backward
+      //TODO: both raise arms
       //TODO: form ball (charge attack)
-      //TODO: release beams
+      //TODO: release beams (elongated ball/tube)
       //TODO: after a sec, ball grows from collision (explosion)
       //TODO: both players fly back
       //TODO: gem splits to 4 pieces and scatters
