@@ -85,7 +85,7 @@ class Project extends Scene_Component
     { let bullet = model_transform;
       bullet = bullet.times(Mat4.translation(Vec.of(0,-1,0)));
       bullet = bullet.times(Mat4.scale(Vec.of(1,1,1)));
-      bullet = bullet.times(Mat4.translation(Vec.of(0,-2,0)));
+      bullet = bullet.times(Mat4.translation(Vec.of(1,-2,0)));
       bullet = bullet.times(Mat4.translation(Vec.of(0,-10*bullet_pos,0)));
       this.shapes.ball.draw(graphics_state, bullet, color);
     }
@@ -132,6 +132,11 @@ class Project extends Scene_Component
           }
           this.shapes.box.draw(graphics_state, map, this.red);
         }
+
+        // isShoot
+        if(isShoot)
+          this.draw_bullet(graphics_state, arm, this.fire);
+
       }
       arm = arm.times(Mat4.scale(Vec.of(1/2,1,1)));
       arm = arm.times(Mat4.translation(Vec.of(-1,-1,0)));
@@ -297,7 +302,7 @@ class Project extends Scene_Component
                                 // new Light( Vec.of( -10, -20, -14, 0 ), Color.of( 1, 1, .3, 1 ), 100    ) ];    // or vector (homogeneous coordinates), color, and size.
 
       // Time t is now in seconds, represents 1 unit for position
-      let t = graphics_state.animation_time/1000;
+      let t = graphics_state.animation_time/300;
 
       // Init figure, axis, floor
       let figure1 = Mat4.identity();
@@ -306,6 +311,13 @@ class Project extends Scene_Component
       this.shapes.box.draw(graphics_state, floor, this.green);
       figure1 = figure1.times(Mat4.translation(Vec.of(0,1,0)));
       this.shapes.axis.draw(graphics_state, figure1, this.rgb);
+
+      // Init figure2
+      let figure2 = figure1;
+      figure2 = figure1.times(Mat4.translation(Vec.of(0,0,40)));
+      figure2 = figure2.times(Mat4.rotation(Math.PI, Vec.of(0,1,0)));
+
+      // Init shuriken
       let shuriken = figure1;
       shuriken = shuriken.times(Mat4.translation(Vec.of(.5,2,-10)));
       shuriken = shuriken.times(Mat4.rotation(-Math.PI/2, Vec.of(0,0,1)));
@@ -426,10 +438,65 @@ class Project extends Scene_Component
           figure1 = figure1.times(Mat4.rotation(-Math.PI/2, Vec.of(0,1,0)));
         }
       }
-      else {
-        // Figure1 keeps looking at figure2
+      else if(t <= 42){
+        // Figure1 starts at current position
         figure1 = figure1.times(Mat4.translation(Vec.of(0,0,2*6+5*9+(32-19))));
         figure1 = figure1.times(Mat4.rotation(-Math.PI, Vec.of(0,1,0)));
+
+        // Shuriken strikes
+        if(t >= 38){
+          shuriken = shuriken.times(Mat4.translation(Vec.of(3,-1.5,-30*(t-38))));
+          shuriken = shuriken.times(Mat4.rotation(-5*t*Math.PI, Vec.of(0,1,0)));
+          this.shapes.windmill.draw(graphics_state, shuriken, this.silver);
+        }
+
+        // Figure1 reacts by jumping
+        if(t >= 39 && t <= 39.5){
+          figure1 = figure1.times(Mat4.translation(Vec.of(0,Math.sin(t),0)));
+        }
+      }
+      else if(t <= 43){
+        // Figure1 starts at current position
+        figure1 = figure1.times(Mat4.translation(Vec.of(0,0,2*6+5*9+(32-19))));
+        figure1 = figure1.times(Mat4.rotation(-Math.PI, Vec.of(0,1,0)));
+
+        // Figure1 and figure2 jumps into position for beam attack (4 units)
+        figure1 = figure1.times(Mat4.translation(Vec.of(0,0,-4)));
+        figure1 = figure1.times(Mat4.rotation(-(t-42)*Math.PI, Vec.of(1,0,0)));
+        figure1 = figure1.times(Mat4.translation(Vec.of(0,0,4)));
+        figure1 = figure1.times(Mat4.rotation((t-42)*Math.PI, Vec.of(1,0,0)));
+        figure2 = figure2.times(Mat4.translation(Vec.of(0,0,2*6+5*9+(32-19)-16)));
+        figure2 = figure2.times(Mat4.translation(Vec.of(0,0,4)));
+        figure2 = figure2.times(Mat4.rotation((t-42)*Math.PI, Vec.of(1,0,0)));
+        figure2 = figure2.times(Mat4.translation(Vec.of(0,0,-4)));
+        figure2 = figure2.times(Mat4.rotation(-(t-42)*Math.PI, Vec.of(1,0,0)));
+        this.draw_figure(graphics_state, figure2, t);
+      }
+      else if(t <= 47){
+        // Figure1 and figure2 keep looking at each other
+        figure1 = figure1.times(Mat4.translation(Vec.of(0,0,2*6+5*9+(32-19) + 8)));
+        figure1 = figure1.times(Mat4.rotation(-Math.PI, Vec.of(0,1,0)));
+        figure2 = figure2.times(Mat4.translation(Vec.of(0,0,2*6+5*9+(32-19) - 8)));
+
+        // Figure1 and figure2 raise arms to charge ball attack for 3 secs
+        if(t <= 44)
+          arm_angle = -(t-43)*Math.PI/2;
+        else
+          isShoot = true;
+        arm_raise_l = true;
+        arm_angle_l = 0;
+        arm_raise_r = true;
+
+        //TODO: From 2nd to 3rd sec, move arm back and forth for lauch attack
+
+        this.draw_figure(graphics_state, figure2, t);
+      }
+      else {
+        // Figure1 and figure2 keep looking at each other
+        figure1 = figure1.times(Mat4.translation(Vec.of(0,0,2*6+5*9+(32-19) + 8)));
+        figure1 = figure1.times(Mat4.rotation(-Math.PI, Vec.of(0,1,0)));
+        figure2 = figure2.times(Mat4.translation(Vec.of(0,0,2*6+5*9+(32-19) - 8)));
+        this.draw_figure(graphics_state, figure2, t);
       }
 
       // */
