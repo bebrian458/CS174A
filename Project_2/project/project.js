@@ -2,7 +2,8 @@
 var arm_angle = 0,      arm_angle_l = 0,
     arm_raise_l = true, arm_raise_r = true,
     headTilt_v = true,  headTilt_v_ang = 0,
-    isShoot = false,    bullet_pos = false,
+    isShoot = false,    bullet_pos = 0,
+    isExplode = false,  explode_range = 0,
     isRun_leg = true,   isRun_arm = false,  runSpeed = 1,
     isHoldMap = 1,      isThrowMap = 0;
 
@@ -83,11 +84,21 @@ class Project extends Scene_Component
     /*** Figure Pieces ***/
     draw_bullet(graphics_state, model_transform, color)
     { let bullet = model_transform;
-      bullet = bullet.times(Mat4.translation(Vec.of(0,-1,0)));
-      bullet = bullet.times(Mat4.scale(Vec.of(1,1,1)));
-      bullet = bullet.times(Mat4.translation(Vec.of(1,-2,0)));
-      bullet = bullet.times(Mat4.translation(Vec.of(0,-10*bullet_pos,0)));
+      let curr_color = color;
+      bullet = bullet.times(Mat4.translation(Vec.of(1,-1-2,0)));
       this.shapes.ball.draw(graphics_state, bullet, color);
+      bullet = bullet.times(Mat4.translation(Vec.of(0,-10*bullet_pos,0)));
+      let finalpos = bullet;
+      finalpos = finalpos.times(Mat4.translation(Vec.of(0,-10*bullet_pos-.75,0)));
+      if(isExplode){
+        finalpos = finalpos.times(Mat4.scale(Vec.of(10*explode_range,14*explode_range,15*explode_range)));
+        curr_color = this.explosion;
+      }
+      if(bullet_pos > 0)
+        this.shapes.ball.draw(graphics_state, finalpos, curr_color);
+      bullet = bullet.times(Mat4.scale(Vec.of(1,20*bullet_pos,1)));
+      bullet = bullet.times(Mat4.rotation(Math.PI/2, Vec.of(1,0,0)));
+      this.shapes.capped.draw(graphics_state, bullet, color);
     }
     draw_leg(graphics_state, model_transform, color, legSide, t)
     { let leg = model_transform;
@@ -479,36 +490,65 @@ class Project extends Scene_Component
         figure2 = figure2.times(Mat4.translation(Vec.of(0,0,2*6+5*9+(32-19) - 8)));
 
         // Figure1 and figure2 raise arms to charge ball attack for 3 secs
-        if(t <= 44)
-          arm_angle = -(t-43)*Math.PI/2;
+        if(t <= 44.025)
+          // arm_angle = -(t-43)*Math.PI/2;
+          arm_angle = -Math.PI/2;
         else
           isShoot = true;
         arm_raise_l = true;
         arm_angle_l = 0;
         arm_raise_r = true;
 
-        //TODO: From 2nd to 3rd sec, move arm back and forth for lauch attack
+        //TODO: From 2nd to 3rd sec, move arm back and forth for launch attack
 
         this.draw_figure(graphics_state, figure2, t);
       }
-      else {
+      else if(t <= 47.5){
         // Figure1 and figure2 keep looking at each other
         figure1 = figure1.times(Mat4.translation(Vec.of(0,0,2*6+5*9+(32-19) + 8)));
         figure1 = figure1.times(Mat4.rotation(-Math.PI, Vec.of(0,1,0)));
         figure2 = figure2.times(Mat4.translation(Vec.of(0,0,2*6+5*9+(32-19) - 8)));
+
+        // Beams launch at each other
+        bullet_pos = 2*(t-47);
+
         this.draw_figure(graphics_state, figure2, t);
+      }
+      else if(t <= 52){
+        // Figure1 and figure2 keep looking at each other
+        figure1 = figure1.times(Mat4.translation(Vec.of(0,0,2*6+5*9+(32-19) + 8)));
+        figure1 = figure1.times(Mat4.rotation(-Math.PI, Vec.of(0,1,0)));
+        figure2 = figure2.times(Mat4.translation(Vec.of(0,0,2*6+5*9+(32-19) - 8)));
+
+        // Explosion
+        isExplode = true;
+        explode_range = t-47.5;
+
+        this.draw_figure(graphics_state, figure2, t);
+      }
+      else if(t <= 53){
+        // Explosion whites out camera for a sec
+        explode_range = 52-47.5;
+
+        // Figure1 and figure2 keep looking at each other
+        figure1 = figure1.times(Mat4.translation(Vec.of(0,0,2*6+5*9+(32-19) + 8)));
+        figure1 = figure1.times(Mat4.rotation(-Math.PI, Vec.of(0,1,0)));
+        figure2 = figure2.times(Mat4.translation(Vec.of(0,0,2*6+5*9+(32-19) - 8)));
+      }
+      else {
+        isShoot = false;
+        isExplode = false;
+
+        // // Figure1 and figure2 keep looking at each other
+        // figure1 = figure1.times(Mat4.translation(Vec.of(0,0,2*6+5*9+(32-19) + 8)));
+        // figure1 = figure1.times(Mat4.rotation(-Math.PI, Vec.of(0,1,0)));
+        // figure2 = figure2.times(Mat4.translation(Vec.of(0,0,2*6+5*9+(32-19) - 8)));
       }
 
       // */
 
       /*** TODO: Scenes ***/
-      //TODO: figure2 throws fireball, hits ground in front of figure1
-      //TODO: figure1 jumps up to dodge, jumps backward
-      //TODO: both raise arms
-      //TODO: form ball (charge attack)
-      //TODO: release beams (elongated ball/tube)
-      //TODO: after a sec, ball grows from collision (explosion)
-      //TODO: both players fly back
+      //TODO: both players found on floor
       //TODO: gem splits to 4 pieces and scatters
 
       /*** TODO: Shapes ***/
