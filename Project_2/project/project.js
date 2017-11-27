@@ -7,7 +7,7 @@ var arm_angle = 0,      arm_angle_l = 0,
     isRun_leg = true,   isRun_arm = false,  runSpeed = 1,
     isHoldMap = 1,      isThrowMap = 0,
     gemBroken = false;
-
+var music = new Audio("assets/river.mp3");
 
 class Project extends Scene_Component
 { constructor(context)
@@ -32,32 +32,20 @@ class Project extends Scene_Component
                                                       .times( p.to4(1) ).to3() };
       var shapes = { 'triangle'        : new Triangle(),                            // At the beginning of our program, instantiate all shapes we plan to use,
                      'strip'           : new Square(),                              // each with only one instance in the graphics card's memory.
-                     'bad_tetrahedron' : new Tetrahedron( false ),                  // For example we would only create one "cube" blueprint in the GPU, but then
                      'tetrahedron'     : new Tetrahedron( true ),                   // re-use it many times per call to display to get multiple cubes in the scene.
                      'windmill'        : new Windmill( 10 ),
                      'box'             : new Cube(),
                      'axis'            : new Axis_Arrows(),
                      'text'            : new Text_Line(50),
-                     'prism'           : new ( Capped_Cylinder   .prototype.make_flat_shaded_version() )( 10, 10, [[0,1],[0,1]] ),
-                      good_sphere      : new Subdivision_Sphere( 4 ),                                           // A sphere made of nearly equilateral triangles / no singularities
-                      vase             : new Grid_Patch( 30, 30, sin_rows_func, rotate_columns_func,   [[0,1],[0,1]] ),
-                      ghost            : new Grid_Patch( 36, 10, sample_star_func, sample_two_arrays,  [[0,1],[0,1]] ),
-                      shell            : new Grid_Patch( 10, 40, line_rows_func, transform_cols_func,  [[0,5],[0,1]] ),
-                      waves            : new Grid_Patch( 30, 30, sin_rows_func, sin_columns_func,      [[0,1],[0,1]] ),
-                      shell2           : new Grid_Patch( 30, 30, sample_star_func, sample_two_arrays2, [[0,1],[0,1]] ),
-                      tube             : new Cylindrical_Tube  ( 10, 10, [[0,1],[0,1]] ),
-                      open_cone        : new Cone_Tip          (  3, 10, [[0,1],[0,1]] ),
-                      donut            : new Torus             ( 15, 15 ),
-                      gem2             : new ( Torus             .prototype.make_flat_shaded_version() )( 20, 20 ),
-                      bad_sphere       : new Grid_Sphere       ( 10, 10 ),                                            // A sphere made of rows and columns, with singularities
-                      septagon         : new Regular_2D_Polygon(  2,  7 ),
-                      cone             : new Closed_Cone       ( 4, 20, [[0,1],[0,1]] ),                       // Cone.  Useful.
-                      capped           : new Capped_Cylinder   ( 4, 12, [[0,1],[0,1]] ),                       // Cylinder.  Also useful.
-                      axis             : new Axis_Arrows(),                                                    // Axis.  Draw them often to check your current basis.
-                      prism            : new ( Capped_Cylinder   .prototype.make_flat_shaded_version() )( 10, 10, [[0,1],[0,1]] ),
-                      gem              : new ( Subdivision_Sphere.prototype.make_flat_shaded_version() )(  2     ),
-                      diamond          : new Diamond(),
-                      swept_curve      : new Surface_Of_Revolution( 10, 10, [ ...Vec.cast( [2, 0, -1], [1, 0, 0], [1, 0, 1], [0, 0, 2] ) ], [ [ 0, 1 ], [ 0, 7 ] ], Math.PI/3 ),
+                     'vase'            : new Grid_Patch( 30, 30, sin_rows_func, rotate_columns_func,   [[0,1],[0,1]] ),
+                     'ghost'           : new Grid_Patch( 36, 10, sample_star_func, sample_two_arrays,  [[0,1],[0,1]] ),
+                     'shell'           : new Grid_Patch( 10, 40, line_rows_func, transform_cols_func,  [[0,5],[0,1]] ),
+                     'donut'           : new Torus             ( 15, 15 ),
+                     'gem2'            : new ( Torus             .prototype.make_flat_shaded_version() )( 20, 20 ),
+                     'capped'          : new Capped_Cylinder   ( 4, 12, [[0,1],[0,1]] ),                       // Cylinder.  Also useful.
+                     'axis'            : new Axis_Arrows(),                                                    // Axis.  Draw them often to check your current basis.
+                     'gem'             : new ( Subdivision_Sphere.prototype.make_flat_shaded_version() )(  2     ),
+                     'diamond'         : new Diamond(),
                      'ball'            : new Subdivision_Sphere( 4 )};
       this.submit_shapes(context, shapes);
       Object.assign( context.globals.graphics_state, { camera_transform: Mat4.translation([ 0, -5,-25 ]), projection_transform: Mat4.perspective( Math.PI/4, context.width/context.height, .1, 1000 ) } );
@@ -157,7 +145,7 @@ class Project extends Scene_Component
       arm = arm.times(Mat4.translation(Vec.of(-1,-1,0)));
       this.shapes.box.draw(graphics_state, arm, color);
     }
-    draw_figure(graphics_state, model_transform, t)
+    draw_figure(graphics_state, model_transform, t, headColor)
     { // Draw head
       let head = model_transform;
       head = head.times(Mat4.translation(Vec.of(0,1,0)));
@@ -168,10 +156,10 @@ class Project extends Scene_Component
         tilt = tilt.times(Mat4.translation(Vec.of(0,-1,1)));
         tilt = tilt.times(Mat4.rotation(headTilt_v_ang, Vec.of(1,0,0)));
         tilt = tilt.times(Mat4.translation(Vec.of(0,1,-1)));
-        this.shapes.box.draw(graphics_state, tilt, this.blue);
+        this.shapes.box.draw(graphics_state, tilt, headColor);
       }
       else
-        this.shapes.box.draw(graphics_state, head, this.blue);
+        this.shapes.box.draw(graphics_state, head, headColor);
 
       // Draw body
       let body = head;
@@ -336,7 +324,7 @@ class Project extends Scene_Component
                                 // new Light( Vec.of( -10, -20, -14, 0 ), Color.of( 1, 1, .3, 1 ), 100    ) ];    // or vector (homogeneous coordinates), color, and size.
 
       // Time t is now in seconds, represents 1 unit for position
-      let t = graphics_state.animation_time/700;
+      let t = graphics_state.animation_time/1000;
 
       // Test diamond
       let test = Mat4.identity();
@@ -425,8 +413,7 @@ class Project extends Scene_Component
         // Keep displaying text
         this.shapes.text.draw(graphics_state, text_model, this.textColor);
 
-        // Camera scroll to the right
-        // graphics_state.camera_transform = Mat4.look_at(Vec.of(15,10,figure1[2][3]), Vec.of(figure1[0][3],figure1[1][3], figure1[2][3]) , Vec.of(0,1,0));
+        // Camera looks figure1 running towards entrance
         graphics_state.camera_transform = Mat4.look_at(Vec.of(8,5,40), Vec.of(0,0,20) , Vec.of(0,1,0));
 
       }
@@ -439,8 +426,7 @@ class Project extends Scene_Component
         // Keep displaying text
         this.shapes.text.draw(graphics_state, text_model, this.textColor);
 
-        // Camera scroll to the right
-        // graphics_state.camera_transform = Mat4.look_at(Vec.of(15,10,figure1[2][3]), Vec.of(figure1[0][3],figure1[1][3], figure1[2][3]) , Vec.of(0,1,0));
+        // Camera looks figure1 running towards entrance
         graphics_state.camera_transform = Mat4.look_at(Vec.of(8,5,40), Vec.of(0,0,20) , Vec.of(0,1,0));
 
       }
@@ -554,7 +540,7 @@ class Project extends Scene_Component
         figure2 = figure2.times(Mat4.rotation((t-42)*Math.PI, Vec.of(1,0,0)));
         figure2 = figure2.times(Mat4.translation(Vec.of(0,0,-4)));
         figure2 = figure2.times(Mat4.rotation(-(t-42)*Math.PI, Vec.of(1,0,0)));
-        this.draw_figure(graphics_state, figure2, t);
+        this.draw_figure(graphics_state, figure2, t, this.red);
 
         // Camera watches both figures from right entrance
         graphics_state.camera_transform = Mat4.look_at(Vec.of(20,3,-30), Vec.of(0,2,-30) , Vec.of(0,1,0));
@@ -577,7 +563,7 @@ class Project extends Scene_Component
 
         //TODO: From 2nd to 3rd sec, move arm back and forth for launch attack
 
-        this.draw_figure(graphics_state, figure2, t);
+        this.draw_figure(graphics_state, figure2, t, this.red);
 
         // Camera watches both figures from right entrance
         graphics_state.camera_transform = Mat4.look_at(Vec.of(20,3,-30), Vec.of(0,2,-30) , Vec.of(0,1,0));
@@ -591,7 +577,7 @@ class Project extends Scene_Component
         // Beams launch at each other
         bullet_pos = 2*(t-47);
 
-        this.draw_figure(graphics_state, figure2, t);
+        this.draw_figure(graphics_state, figure2, t, this.red);
 
         // Camera watches both figures from right entrance
         graphics_state.camera_transform = Mat4.look_at(Vec.of(20,3,-30), Vec.of(0,2,-30) , Vec.of(0,1,0));
@@ -606,7 +592,7 @@ class Project extends Scene_Component
         isExplode = true;
         explode_range = t-47.5;
 
-        this.draw_figure(graphics_state, figure2, t);
+        this.draw_figure(graphics_state, figure2, t, this.red);
 
         // Camera watches both figures from right entrance
         graphics_state.camera_transform = Mat4.look_at(Vec.of(20,3,-30), Vec.of(0,2,-30) , Vec.of(0,1,0));
@@ -616,23 +602,14 @@ class Project extends Scene_Component
         isExplode = false;
         gemBroken = true;
 
-        // // Figure1 and figure2 keep looking at each other
-        // figure1 = figure1.times(Mat4.translation(Vec.of(0,0,2*6+5*9+(32-19) + 8)));
-        // figure1 = figure1.times(Mat4.rotation(-Math.PI, Vec.of(0,1,0)));
-        // figure2 = figure2.times(Mat4.translation(Vec.of(0,0,2*6+5*9+(32-19) - 8)));
-
-        if(t >= 54 && t <= 62)
-        // Camera watches both figures from right entrance
-        graphics_state.camera_transform = Mat4.look_at(Vec.of(20-2*(t-54),3,-30), Vec.of(0,2,-30) , Vec.of(0,1,0));
+        if(t >= 54 && t <= 62){
+          // Camera zooms innto broken gem
+          graphics_state.camera_transform = Mat4.look_at(Vec.of(20-2*(t-54),3,-30), Vec.of(0,2,-30) , Vec.of(0,1,0));
+          music.play();
+        }
       }
 
-      // */
-
-      /*** TODO: Scenes ***/
-      //TODO: both players found on floor
-
       // Always draw figure
-      this.draw_figure(graphics_state, figure1, t);
-
+      this.draw_figure(graphics_state, figure1, t, this.blue);
     }
 }
