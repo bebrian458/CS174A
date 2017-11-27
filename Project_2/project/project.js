@@ -336,7 +336,7 @@ class Project extends Scene_Component
                                 // new Light( Vec.of( -10, -20, -14, 0 ), Color.of( 1, 1, .3, 1 ), 100    ) ];    // or vector (homogeneous coordinates), color, and size.
 
       // Time t is now in seconds, represents 1 unit for position
-      let t = graphics_state.animation_time/100;
+      let t = graphics_state.animation_time/700;
 
       // Test diamond
       let test = Mat4.identity();
@@ -373,8 +373,8 @@ class Project extends Scene_Component
 
       // Position text
       let text_model = Mat4.identity();
-      text_model = text_model.times(Mat4.translation(Vec.of(-8.5,13,-18+40)));
-      text_model = text_model.times(Mat4.scale(Vec.of(1/3,1/3,1/3)));
+      text_model = text_model.times(Mat4.translation(Vec.of(-8.5+5,10,-18+40)));
+      text_model = text_model.times(Mat4.scale(Vec.of(1/8,1/8,1/8)));
       this.shapes.text.set_string("Here lies the Stone of Everlasting Life");
 
       // Draw arena
@@ -398,7 +398,7 @@ class Project extends Scene_Component
         this.shapes.text.draw(graphics_state, text_model, this.textColor);
 
         // Camera scroll to the right
-        // graphics_state.camera_transform = Mat4.look_at(Vec.of(figure1[0][3],13,25), Vec.of(figure1[0][3],0, 0) , Vec.of(0,1,0));
+        graphics_state.camera_transform = Mat4.look_at(Vec.of(15,10,figure1[2][3]), Vec.of(figure1[0][3],figure1[1][3], figure1[2][3]) , Vec.of(0,1,0));
       }
       else if(t <= 8){
         // Look up
@@ -409,6 +409,10 @@ class Project extends Scene_Component
 
         // Keep displaying text
         this.shapes.text.draw(graphics_state, text_model, this.textColor);
+
+        // Camera pan up
+        if(t <= 7)
+          graphics_state.camera_transform = Mat4.look_at(Vec.of(figure1[0][3],figure1[1][3]+3,figure1[2][3]-2), Vec.of(0,24*(t-6)+3,0) , Vec.of(0,1,0));
       }
       else if(t <= 10){
         // Wait a sec
@@ -420,6 +424,11 @@ class Project extends Scene_Component
 
         // Keep displaying text
         this.shapes.text.draw(graphics_state, text_model, this.textColor);
+
+        // Camera scroll to the right
+        // graphics_state.camera_transform = Mat4.look_at(Vec.of(15,10,figure1[2][3]), Vec.of(figure1[0][3],figure1[1][3], figure1[2][3]) , Vec.of(0,1,0));
+        graphics_state.camera_transform = Mat4.look_at(Vec.of(8,5,40), Vec.of(0,0,20) , Vec.of(0,1,0));
+
       }
       else if(t <= 11){
         // Throw map up
@@ -429,6 +438,11 @@ class Project extends Scene_Component
 
         // Keep displaying text
         this.shapes.text.draw(graphics_state, text_model, this.textColor);
+
+        // Camera scroll to the right
+        // graphics_state.camera_transform = Mat4.look_at(Vec.of(15,10,figure1[2][3]), Vec.of(figure1[0][3],figure1[1][3], figure1[2][3]) , Vec.of(0,1,0));
+        graphics_state.camera_transform = Mat4.look_at(Vec.of(8,5,40), Vec.of(0,0,20) , Vec.of(0,1,0));
+
       }
       else if(t <= 20){
         // Make figure1 run 25 units; pos: 12+25=37
@@ -441,12 +455,22 @@ class Project extends Scene_Component
 
         // Keep displaying text
         this.shapes.text.draw(graphics_state, text_model, this.textColor);
+
+        if(t <= 18) // Camera looks figure1 running towards entrance
+          graphics_state.camera_transform = Mat4.look_at(Vec.of(8,5,40), Vec.of(0,0,20) , Vec.of(0,1,0));
+        else // Camera follows behind figure1
+          graphics_state.camera_transform = Mat4.look_at(Vec.of(0,3,figure1[2][3]+15), Vec.of(0,2,figure1[2][3]) , Vec.of(0,1,0));
       }
       else if(t <= 32){
         // Make figure1 walk 32-19 units
         runSpeed = 1;
         isRun_arm = false;
         figure1 = figure1.times(Mat4.translation(Vec.of(0,0,2*6+5*9 + (t-19))));
+
+        if (t <= 28)// Camera follows behind figure1
+          graphics_state.camera_transform = Mat4.look_at(Vec.of(0,3,figure1[2][3]+15), Vec.of(0,2,figure1[2][3]) , Vec.of(0,1,0));
+        else // Camera follows figure1 at an angle
+          graphics_state.camera_transform = Mat4.look_at(Vec.of(8,3,figure1[2][3]+10), Vec.of(0,2,figure1[2][3]) , Vec.of(0,1,0));
       }
       else if(t <= 33){
         // Make figure1 turn towards gem and wait a sec
@@ -454,6 +478,9 @@ class Project extends Scene_Component
         headTilt_v_ang = Math.PI/6;
         figure1 = figure1.times(Mat4.translation(Vec.of(0,0,2*6+5*9+(32-19))));
         figure1 = figure1.times(Mat4.rotation(-Math.PI/2, Vec.of(0,1,0)));
+
+        // Camera follows figure1 at an angle
+        graphics_state.camera_transform = Mat4.look_at(Vec.of(8,3,figure1[2][3]+10), Vec.of(0,2,figure1[2][3]) , Vec.of(0,1,0));
       }
       else if(t <= 34){
         // Make figure1 raise arm to reach for gem
@@ -461,6 +488,9 @@ class Project extends Scene_Component
         arm_angle_l = -(t-33)*Math.PI/2;
         figure1 = figure1.times(Mat4.translation(Vec.of(0,0,2*6+5*9+(32-19))));
         figure1 = figure1.times(Mat4.rotation(-Math.PI/2, Vec.of(0,1,0)));
+
+        // Camera follows figure1 at an angle
+        graphics_state.camera_transform = Mat4.look_at(Vec.of(8,3,figure1[2][3]+10), Vec.of(0,2,figure1[2][3]) , Vec.of(0,1,0));
       }
       else if(t <= 38){
         // Make figure1 stay
@@ -485,6 +515,9 @@ class Project extends Scene_Component
           headTilt_v = false;
           figure1 = figure1.times(Mat4.rotation(-Math.PI/2, Vec.of(0,1,0)));
         }
+
+        // Camera follows figure1 at an angle
+        graphics_state.camera_transform = Mat4.look_at(Vec.of(8,3,figure1[2][3]+10), Vec.of(0,2,figure1[2][3]) , Vec.of(0,1,0));
       }
       else if(t <= 42){
         // Figure1 starts at current position
@@ -502,6 +535,9 @@ class Project extends Scene_Component
         if(t >= 39 && t <= 39.5){
           figure1 = figure1.times(Mat4.translation(Vec.of(0,Math.sin(t),0)));
         }
+
+        // Camera follows figure1 at an angle
+        graphics_state.camera_transform = Mat4.look_at(Vec.of(8,3,figure1[2][3]+10), Vec.of(0,2,figure1[2][3]) , Vec.of(0,1,0));
       }
       else if(t <= 43){
         // Figure1 starts at current position
@@ -519,6 +555,9 @@ class Project extends Scene_Component
         figure2 = figure2.times(Mat4.translation(Vec.of(0,0,-4)));
         figure2 = figure2.times(Mat4.rotation(-(t-42)*Math.PI, Vec.of(1,0,0)));
         this.draw_figure(graphics_state, figure2, t);
+
+        // Camera watches both figures from right entrance
+        graphics_state.camera_transform = Mat4.look_at(Vec.of(20,3,-30), Vec.of(0,2,-30) , Vec.of(0,1,0));
       }
       else if(t <= 47){
         // Figure1 and figure2 keep looking at each other
@@ -539,6 +578,9 @@ class Project extends Scene_Component
         //TODO: From 2nd to 3rd sec, move arm back and forth for launch attack
 
         this.draw_figure(graphics_state, figure2, t);
+
+        // Camera watches both figures from right entrance
+        graphics_state.camera_transform = Mat4.look_at(Vec.of(20,3,-30), Vec.of(0,2,-30) , Vec.of(0,1,0));
       }
       else if(t <= 47.5){
         // Figure1 and figure2 keep looking at each other
@@ -550,6 +592,9 @@ class Project extends Scene_Component
         bullet_pos = 2*(t-47);
 
         this.draw_figure(graphics_state, figure2, t);
+
+        // Camera watches both figures from right entrance
+        graphics_state.camera_transform = Mat4.look_at(Vec.of(20,3,-30), Vec.of(0,2,-30) , Vec.of(0,1,0));
       }
       else if(t <= 52){
         // Figure1 and figure2 keep looking at each other
@@ -562,6 +607,9 @@ class Project extends Scene_Component
         explode_range = t-47.5;
 
         this.draw_figure(graphics_state, figure2, t);
+
+        // Camera watches both figures from right entrance
+        graphics_state.camera_transform = Mat4.look_at(Vec.of(20,3,-30), Vec.of(0,2,-30) , Vec.of(0,1,0));
       }
       else {
         isShoot = false;
@@ -572,14 +620,16 @@ class Project extends Scene_Component
         // figure1 = figure1.times(Mat4.translation(Vec.of(0,0,2*6+5*9+(32-19) + 8)));
         // figure1 = figure1.times(Mat4.rotation(-Math.PI, Vec.of(0,1,0)));
         // figure2 = figure2.times(Mat4.translation(Vec.of(0,0,2*6+5*9+(32-19) - 8)));
+
+        if(t >= 54 && t <= 62)
+        // Camera watches both figures from right entrance
+        graphics_state.camera_transform = Mat4.look_at(Vec.of(20-2*(t-54),3,-30), Vec.of(0,2,-30) , Vec.of(0,1,0));
       }
 
       // */
 
       /*** TODO: Scenes ***/
       //TODO: both players found on floor
-
-      //TODO: Camera adjustments
 
       // Always draw figure
       this.draw_figure(graphics_state, figure1, t);
