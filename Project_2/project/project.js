@@ -5,7 +5,8 @@ var arm_angle = 0,      arm_angle_l = 0,
     isShoot = false,    bullet_pos = 0,
     isExplode = false,  explode_range = 0,
     isRun_leg = true,   isRun_arm = false,  runSpeed = 1,
-    isHoldMap = 1,      isThrowMap = 0;
+    isHoldMap = 1,      isThrowMap = 0,
+    gemBroken = false;
 
 
 class Project extends Scene_Component
@@ -55,12 +56,13 @@ class Project extends Scene_Component
                       axis             : new Axis_Arrows(),                                                    // Axis.  Draw them often to check your current basis.
                       prism            : new ( Capped_Cylinder   .prototype.make_flat_shaded_version() )( 10, 10, [[0,1],[0,1]] ),
                       gem              : new ( Subdivision_Sphere.prototype.make_flat_shaded_version() )(  2     ),
+                      diamond          : new Diamond(),
                       swept_curve      : new Surface_Of_Revolution( 10, 10, [ ...Vec.cast( [2, 0, -1], [1, 0, 0], [1, 0, 1], [0, 0, 2] ) ], [ [ 0, 1 ], [ 0, 7 ] ], Math.PI/3 ),
                      'ball'            : new Subdivision_Sphere( 4 )};
       this.submit_shapes(context, shapes);
       Object.assign( context.globals.graphics_state, { camera_transform: Mat4.translation([ 0, -5,-25 ]), projection_transform: Mat4.perspective( Math.PI/4, context.width/context.height, .1, 1000 ) } );
       Object.assign( this, { shader: context.get_instance( Fake_Bump_Map ), textures: [], gallery: false, patch_only: false, revolution_only: false } );
-      for( let filename of [ "/assets/rgb.jpg", "/assets/stars.png", "/assets/earth.gif", "/assets/text.png", "/assets/explosion.png", "/assets/text.png", "/assets/smiley.png", "/assets/wall.png", "/assets/ground1.jpg", "/assets/ground2.jpg", "/assets/hieroglyphics.jpg"] ) this.textures.push( context.get_instance( filename ) ); this.textures.push( undefined );
+      for( let filename of [ "/assets/rgb.jpg", "/assets/stars.png", "/assets/earth.gif", "/assets/text.png", "/assets/explosion.png", "/assets/text.png", "/assets/smiley.png", "/assets/wall.png", "/assets/ground1.jpg", "/assets/ground2.jpg", "/assets/hieroglyphics.jpg", "/assets/nightsky.jpg", "/assets/nightsky2.jpg"] ) this.textures.push( context.get_instance( filename ) ); this.textures.push( undefined );
       Object.assign( this, { yellow       : context.get_instance( Phong_Model  ).material( Color.of( .8, .8, .3,  1 ), .2, 1, .7, 40 ),  // Call material() on the Phong_Shader,
                              brown        : context.get_instance( Phong_Model  ).material( Color.of( .3, .3, .1,  1 ), .2, 1,  1, 40 ),  // which returns a special-made "material"
                              red          : context.get_instance( Phong_Model  ).material( Color.of(  1,  0,  0, .9 ), .1, .7, 1, 40 ),  // (a JavaScript object)
@@ -77,6 +79,8 @@ class Project extends Scene_Component
                              wall         : context.get_instance( Phong_Model  ).material( Color.of( 0,0,0,1 ), .5, .5, .5, 40, context.get_instance( "assets/wall.png" ) ),
                              ground1      : context.get_instance( Phong_Model  ).material( Color.of( 0,0,0,1 ), .5, .5, .5, 40, context.get_instance( "assets/ground1.jpg" ) ),
                              ground2      : context.get_instance( Phong_Model  ).material( Color.of( 0,0,0,1 ), 1, 0, 0, 40, context.get_instance( "assets/ground2.jpg" ) ),
+                             nightsky     : context.get_instance( Phong_Model  ).material( Color.of( 0,0,0,1 ), .4, 0, 0, 40, context.get_instance( "assets/nightsky.jpg" ) ),
+                             nightsky2     : context.get_instance( Phong_Model  ).material( Color.of( 0,0,0,1 ), .4, 0, 0, 40, context.get_instance( "assets/nightsky2.jpg" ) ),
                              hieroglyphics: context.get_instance( Phong_Model  ).material( Color.of( .1,.1,0,1 ), 1, .5, .5, 40, context.get_instance( "assets/hieroglyphics.jpg" ) ),
                              textColor    : context.get_instance( Phong_Model  ).material( Color.of( 0,0,0,1 ), 1, 0, 0, 40, context.get_instance( "assets/text.png" ) ),
                              stars        : context.get_instance( Phong_Model  ).material( Color.of( 0,0,1,1 ), .5, .5, .5, 40, context.get_instance( "assets/stars.png" ) ) } );
@@ -251,7 +255,7 @@ class Project extends Scene_Component
       newPos = newPos.times(Mat4.translation(Vec.of(0,1,0)));
       this.shapes.ghost.draw(graphics_state, newPos, this.yellow);
     }
-    draw_gem_statue(graphics_state, position)
+    draw_gem_statue(graphics_state, position, t)
     { let base = position;
       base = base.times(Mat4.translation(Vec.of(0,1,0)));
       base = base.times(Mat4.scale(Vec.of(1/2,1/2,1/2)));
@@ -263,10 +267,29 @@ class Project extends Scene_Component
       this.shapes.box.draw(graphics_state, base, this.hieroglyphics);
       base = base.times(Mat4.translation(Vec.of(-2,0,0)));
       this.shapes.box.draw(graphics_state, base, this.hieroglyphics);
-      //TODO: change ball to gem
-      this.shapes.ball.draw(graphics_state, base.times(Mat4.translation(Vec.of(1,2,1))), this.red);
+
+      if(!gemBroken){
+        base = base.times(Mat4.translation(Vec.of(1,2,1)));
+        base = base.times(Mat4.scale(Vec.of(1,1.5,1)));
+        base = base.times(Mat4.scale(Vec.of(.75,.75,.75)));
+        base = base.times(Mat4.translation(Vec.of(0,1,0)));
+        base = base.times(Mat4.rotation(2*t, Vec.of(0,1,0)));
+        this.shapes.diamond.draw(graphics_state, base, this.red);
+      }
+      else {
+        base = base.times(Mat4.translation(Vec.of(1,1,0)));
+
+        for(let i = 0; i < 4; i++){
+          base = base.times(Mat4.translation(Vec.of(-.5,0,0)));
+          base = base.times(Mat4.rotation(Math.PI/2, Vec.of(0,1,0)));
+          base = base.times(Mat4.translation(Vec.of(-1,0,-1)));
+          let newbase = base;
+          newbase = newbase.times(Mat4.translation(Vec.of(.5,0,.5)));
+          this.shapes.tetrahedron.draw(graphics_state, newbase, this.red);
+        }
+      }
     }
-    draw_arena(graphics_state, center)
+    draw_arena(graphics_state, center, t)
     {
       let arena = center;
       arena = arena.times(Mat4.scale(Vec.of(1,1,2.5)));
@@ -304,7 +327,7 @@ class Project extends Scene_Component
         this.draw_vase_statue(graphics_state, vase, -side);
 
         let gem = newCenter.times(Mat4.translation(Vec.of(0,0,0)));
-        this.draw_gem_statue(graphics_state, gem);
+        this.draw_gem_statue(graphics_state, gem, t);
       }
     }
 
@@ -313,15 +336,29 @@ class Project extends Scene_Component
                                 // new Light( Vec.of( -10, -20, -14, 0 ), Color.of( 1, 1, .3, 1 ), 100    ) ];    // or vector (homogeneous coordinates), color, and size.
 
       // Time t is now in seconds, represents 1 unit for position
-      let t = graphics_state.animation_time/300;
+      let t = graphics_state.animation_time/100;
+
+      // Test diamond
+      let test = Mat4.identity();
+      test = test.times(Mat4.rotation(2*t, Vec.of(0,1,0)));
+      test = test.times(Mat4.scale(Vec.of(1,1.5,1)));
+      test = test.times(Mat4.translation(Vec.of(0,2,0)));
+      // test = test.times(Mat4.rotation(Math.PI/12, Vec.of(1,0,0)));
+      test = test.times(Mat4.translation(Vec.of(0,1,0)));
+      // this.shapes.diamond.draw(graphics_state, test, this.yellow);
 
       // Init figure, axis, floor
       let figure1 = Mat4.identity();
-      let floor = figure1.times(Mat4.scale(Vec.of(40,1,40)));
+      let floor = figure1.times(Mat4.scale(Vec.of(100,1,100)));
       // floor = floor.times(Mat4.translation(Vec.of(0,0,-1)));
       this.shapes.box.draw(graphics_state, floor, this.green);
       figure1 = figure1.times(Mat4.translation(Vec.of(0,1,0)));
-      this.shapes.axis.draw(graphics_state, figure1, this.rgb);
+      // this.shapes.axis.draw(graphics_state, figure1, this.rgb);
+      let sky = Mat4.identity();
+      sky = sky.times(Mat4.scale(Vec.of(150,150,150)));
+      sky = sky.times(Mat4.rotation(Math.PI/2, Vec.of(1,0,1)));
+      sky = sky.times(Mat4.translation(Vec.of(0,.5,0)));
+      this.shapes.ball.draw(graphics_state, sky, this.nightsky2);
 
       // Init figure2
       let figure2 = figure1;
@@ -343,7 +380,7 @@ class Project extends Scene_Component
       // Draw arena
       let arena = figure1;
       arena = arena.times(Mat4.translation(Vec.of(-15,0,-30)));
-      this.draw_arena(graphics_state, arena);
+      this.draw_arena(graphics_state, arena, t);
 
       // Init figure1 position and direction
       figure1 = figure1.times(Mat4.translation(Vec.of(0,0,40)));
@@ -526,18 +563,10 @@ class Project extends Scene_Component
 
         this.draw_figure(graphics_state, figure2, t);
       }
-      else if(t <= 53){
-        // Explosion whites out camera for a sec
-        explode_range = 52-47.5;
-
-        // Figure1 and figure2 keep looking at each other
-        figure1 = figure1.times(Mat4.translation(Vec.of(0,0,2*6+5*9+(32-19) + 8)));
-        figure1 = figure1.times(Mat4.rotation(-Math.PI, Vec.of(0,1,0)));
-        figure2 = figure2.times(Mat4.translation(Vec.of(0,0,2*6+5*9+(32-19) - 8)));
-      }
       else {
         isShoot = false;
         isExplode = false;
+        gemBroken = true;
 
         // // Figure1 and figure2 keep looking at each other
         // figure1 = figure1.times(Mat4.translation(Vec.of(0,0,2*6+5*9+(32-19) + 8)));
@@ -549,11 +578,6 @@ class Project extends Scene_Component
 
       /*** TODO: Scenes ***/
       //TODO: both players found on floor
-      //TODO: gem splits to 4 pieces and scatters
-
-      /*** TODO: Shapes ***/
-      //TODO: gem
-      //TODO: floor/sky
 
       //TODO: Camera adjustments
 

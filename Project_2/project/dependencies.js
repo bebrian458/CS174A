@@ -1,5 +1,47 @@
 let core_dependencies = "Vec Mat Mat4 Shape Keyboard_Manager Graphics_State Light Color Graphics_Addresses Shader Canvas_Manager Texture Scene_Component Object_From_File Code_Manager".split(' ');
-let all_dependencies =  "Triangle Square Tetrahedron Windmill Subdivision_Sphere Cube Phong_Model Funny_Shader Movement_Controls Global_Info_Table Grid_Patch Surface_Of_Revolution Regular_2D_Polygon Cylindrical_Tube Cone_Tip Torus Grid_Sphere Closed_Cone Rounded_Closed_Cone Capped_Cylinder Rounded_Capped_Cylinder Axis_Arrows Fake_Bump_Map Text_Line".split(' ');
+let all_dependencies =  "Triangle Square Tetrahedron Windmill Subdivision_Sphere Cube Phong_Model Funny_Shader Movement_Controls Global_Info_Table Grid_Patch Surface_Of_Revolution Regular_2D_Polygon Cylindrical_Tube Cone_Tip Torus Grid_Sphere Closed_Cone Rounded_Closed_Cone Capped_Cylinder Rounded_Capped_Cylinder Axis_Arrows Fake_Bump_Map Text_Line Diamond".split(' ');
+
+class Diamond extends Shape
+{ constructor()
+    { super();
+      var a = 1/Math.sqrt(2);
+      var h = Math.sqrt(2);
+
+      this.positions     .push( ...Vec.cast( [-1,0,1],  [0,h,0], [1,0,1],       // Top Front
+                                             [-1,0,1],  [0,h,0], [-1,0,-1],     // Top Left
+                                             [1,0,1],   [0,h,0], [1,0,-1],      // Top Right
+                                             [-1,0,-1], [0,h,0], [1,0,-1],      // Top Back
+
+                                             [-1,0,1],  [0,-h,0], [1,0,1],       // Bot Front
+                                             [-1,0,1],  [0,-h,0], [-1,0,-1],     // Bot Left
+                                             [1,0,1],   [0,-h,0], [1,0,-1],      // Bot Right
+                                             [-1,0,-1], [0,-h,0], [1,0,-1],) );  // Bot Back
+
+      this.normals       .push( ...Vec.cast( [ 0,a,a ],  [ 0,a,a ], [ 0,a,a],        // This here makes Method 2 flat shaded, since values of
+                                             [ -a,a,0],  [ -a,a,0], [ -a,a,0],       // normal vectors can be constant per whole triangle.
+                                             [ a,a,0 ],  [ a,a,0 ], [ a,a,0],        // Repeat them for all three vertices.
+                                             [ 0,a,-a],  [ 0,a,-a], [ 0,a,-a],
+
+                                             [ 0,-a,a ],  [ 0,-a,a ], [ 0,-a,a],        // This here makes Method 2 flat shaded, since values of
+                                             [ -a,-a,0],  [ -a,-a,0], [ -a,-a,0],       // normal vectors can be constant per whole triangle.
+                                             [ a,-a,0 ],  [ a,-a,0 ], [ a,-a,0],        // Repeat them for all three vertices.
+                                             [ 0,-a,-a],  [ 0,-a,-a], [ 0,-a,-a]) );
+
+      this.texture_coords.push( ...Vec.cast( [0,0], [1,1], [1,0],      // Each face in Method 2 also gets its own set of texture coords
+                                             [0,0], [1,1], [1,0],      //(half the image is mapped onto each face).  We couldn't do this
+                                             [0,0], [1,1], [1,0],      // with shared vertices since this features abrupt transitions
+                                             [0,0], [1,1], [1,0],      // when approaching the same point from different directions.
+
+                                             [0,0], [1,1], [1,0],      // Each face in Method 2 also gets its own set of texture coords
+                                             [0,0], [1,1], [1,0],      //(half the image is mapped onto each face).  We couldn't do this
+                                             [0,0], [1,1], [1,0],      // with shared vertices since this features abrupt transitions
+                                             [0,0], [1,1], [1,0] ) );  // when approaching the same point from different directions.
+
+      this.indices.push( 0,1,2, 3,4,5, 6,7,8, 9,10,11, 12,13,14, 15,16,17, 18,19,20, 21,22,23 );
+    }
+}
+
+
   // *********** TRIANGLE ***********
 class Triangle extends Shape    // First, the simplest possible Shape – one triangle.  It has 3 vertices, each
 { constructor()                 // having their own 3D position, normal vector, and texture-space coordinate.
